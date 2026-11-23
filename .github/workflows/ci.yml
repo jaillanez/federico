@@ -29,6 +29,8 @@ jobs:
         ports: ["1025:1025", "8025:8025"]
     env:
       MINIO_RELEASE: RELEASE.2025-10-15T17-29-55Z
+      # Commit of that tag; the build fails if the tag ever points elsewhere.
+      MINIO_COMMIT: 9e49d5e7a648f00e26f2246f4dc28e6b07f8c84a
       TEST_DATABASE_URL: postgresql+asyncpg://sei_owner:ci@localhost:5432/sei_test
       TEST_S3_ENDPOINT: http://localhost:9000
       S3_ACCESS_KEY: sei-minio
@@ -37,25 +39,21 @@ jobs:
       TEST_SMTP_PORT: "1025"
     steps:
       - uses: actions/checkout@v5
-      # MinIO no longer publishes community images or binaries, so we build the pinned
-      # release from source once and cache the binary (same version as Homebrew locally).
-      - name: Cache MinIO binary
-        id: minio-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/minio-bin
-          key: minio-${{ env.MINIO_RELEASE }}-linux-amd64
+      # MinIO no longer publishes community images or binaries, so we build the pinned release
+      # from source on every run (no cached binary to tamper with) and verify the exact commit.
       - uses: actions/setup-go@v5
-        if: steps.minio-cache.outputs.cache-hit != 'true'
         with:
           go-version: "1.24"
           cache: false
       - name: Build MinIO from source
-        if: steps.minio-cache.outputs.cache-hit != 'true'
         working-directory: /tmp
         run: |
-          git clone --depth 1 --branch "$MINIO_RELEASE" https://github.com/minio/minio.git minio-src
-          cd minio-src && CGO_ENABLED=0 go build -trimpath -o ~/minio-bin/minio .
+          git clone --filter=blob:none --no-checkout https://github.com/minio/minio.git minio-src
+          cd minio-src
+          git checkout --quiet "$MINIO_COMMIT"
+          test "$(git rev-parse HEAD)" = "$MINIO_COMMIT"
+          test "$(git rev-parse "refs/tags/$MINIO_RELEASE^{commit}")" = "$MINIO_COMMIT"
+          CGO_ENABLED=0 go build -trimpath -o ~/minio-bin/minio .
       - name: Start MinIO
         run: |
           MINIO_ROOT_USER=sei-minio MINIO_ROOT_PASSWORD=sei-minio-secret \
