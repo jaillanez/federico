@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,12 +18,14 @@ class Settings(BaseSettings):
     # Comma-separated list of allowed CORS origins (only our own domain).
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4321"])
     # Secret used to hash IPs of leads and sign sessions. Must be overridden.
-    secret_key: str = "change-me"  # noqa: S105
+    # SecretStr keeps the value out of reprs, logs and validation errors.
+    secret_key: SecretStr = SecretStr("change-me")
 
     @model_validator(mode="after")
     def _require_strong_secret_in_production(self) -> Self:
         weak = {"change-me", "dev-secret-change-me"}
-        if self.is_production and (self.secret_key in weak or len(self.secret_key) < 32):
+        secret = self.secret_key.get_secret_value()
+        if self.is_production and (secret in weak or len(secret) < 32):
             raise ValueError("SECRET_KEY: usá una clave aleatoria de 32+ caracteres")
         return self
 
