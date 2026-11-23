@@ -28,6 +28,7 @@ jobs:
         image: axllent/mailpit:v1.27
         ports: ["1025:1025", "8025:8025"]
     env:
+      MINIO_RELEASE: RELEASE.2025-10-15T17-29-55Z
       TEST_DATABASE_URL: postgresql+asyncpg://sei_owner:ci@localhost:5432/sei_test
       TEST_S3_ENDPOINT: http://localhost:9000
       S3_ACCESS_KEY: sei-minio
@@ -36,14 +37,31 @@ jobs:
       TEST_SMTP_PORT: "1025"
     steps:
       - uses: actions/checkout@v5
-      # MinIO needs a command argument, which service containers cannot pass.
+      # MinIO no longer publishes community images or binaries, so we build the pinned
+      # release from source once and cache the binary (same version as Homebrew locally).
+      - name: Cache MinIO binary
+        id: minio-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/minio-bin
+          key: minio-${{ env.MINIO_RELEASE }}-linux-amd64
+      - uses: actions/setup-go@v5
+        if: steps.minio-cache.outputs.cache-hit != 'true'
+        with:
+          go-version: "1.24"
+          cache: false
+      - name: Build MinIO from source
+        if: steps.minio-cache.outputs.cache-hit != 'true'
+        working-directory: /tmp
+        run: |
+          git clone --depth 1 --branch "$MINIO_RELEASE" https://github.com/minio/minio.git minio-src
+          cd minio-src && CGO_ENABLED=0 go build -trimpath -o ~/minio-bin/minio .
       - name: Start MinIO
         run: |
-          docker run -d --name minio -p 9000:9000 \
-            -e MINIO_ROOT_USER=sei-minio -e MINIO_ROOT_PASSWORD=sei-minio-secret \
-            minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          MINIO_ROOT_USER=sei-minio MINIO_ROOT_PASSWORD=sei-minio-secret \
+            nohup ~/minio-bin/minio server /tmp/minio-data --address :9000 > /tmp/minio.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/live && exit 0; sleep 1; done
-          docker logs minio; exit 1
+          cat /tmp/minio.log; exit 1
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -112,3 +130,7 @@ jobs:
           test -f dist/articulos/ejemplo-que-es-la-energia-reactiva.html
           test -f dist/og/inicio.png
           ! test -e dist/estilos.html
+      # The background API keeps uv's cache locked; stop it so setup-uv can save the cache.
+      - name: Stop API
+        if: always()
+        run: pkill -f "uvicorn app.main:app" || true
