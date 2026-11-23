@@ -31,6 +31,14 @@ api/    FastAPI + SQLAlchemy 2 async + Alembic (gestionado con uv)
 infra/  Docker Compose, Caddyfile, scripts de la base
 ```
 
+## Build del sitio público
+
+`astro build` lee obras, artículos, testimonios y ajustes de la API (`API_INTERNAL_URL`), así que
+la API tiene que estar corriendo. Si no responde, el build falla a propósito, para no publicar un
+sitio vacío. Para una prueba rápida de la interfaz sin API: `SEI_OFFLINE_BUILD=1 npm run build`.
+
+Tests de la web (fórmulas del simulador y de cos φ, Markdown): `cd web && npm test`.
+
 ## Variables de entorno
 
 Todas están documentadas en [.env.example](.env.example). La base usa dos usuarios:

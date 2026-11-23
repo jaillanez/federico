@@ -45,6 +45,22 @@ jobs:
     defaults:
       run:
         working-directory: web
+    # The static build reads projects and articles from the API, so CI runs a real one.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sei_owner
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: sei
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sei_owner" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://sei_owner:ci@localhost:5432/sei
+      ENVIRONMENT: test
+      API_INTERNAL_URL: http://localhost:8000
+      PUBLIC_SITE_URL: https://servielect.com.ar
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -52,10 +68,31 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
       - run: npm ci
       - name: Lint
         run: npm run lint
       - name: Types
         run: npm run check
+      - name: Unit tests (formulas, markdown)
+        run: npm test
+      - name: Start API with sample data
+        working-directory: api
+        run: |
+          uv sync --frozen
+          uv run alembic upgrade head
+          uv run python -m app.scripts.seed
+          nohup uv run uvicorn app.main:app --port 8000 > /tmp/api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/health && exit 0; sleep 1; done
+          cat /tmp/api.log; exit 1
       - name: Build
         run: npm run build
+      - name: Check generated pages
+        run: |
+          test -f dist/obras/ejemplo-tablero-bombeo-finca.html
+          test -f dist/articulos/ejemplo-que-es-la-energia-reactiva.html
+          test -f dist/og/inicio.png
+          ! test -e dist/estilos.html
