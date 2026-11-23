@@ -22,8 +22,23 @@ def test_error_and_repr_do_not_leak_secret() -> None:
 
 
 def test_production_accepts_strong_secret() -> None:
-    assert Settings(environment="production", secret_key="x" * 32).check_secure().is_production
+    strong = Settings(
+        environment="production", secret_key="x" * 32, turnstile_secret_key="t", mail_backend="smtp"
+    )
+    assert strong.check_secure().is_production
 
 
 def test_development_allows_dev_secret() -> None:
     assert not Settings(environment="development").check_secure().is_production
+
+
+def test_production_requires_turnstile_and_smtp() -> None:
+    with pytest.raises(InsecureConfigError):
+        Settings(environment="production", secret_key="x" * 32, mail_backend="smtp").check_secure()
+    with pytest.raises(InsecureConfigError):
+        Settings(
+            environment="production",
+            secret_key="x" * 32,
+            turnstile_secret_key="t",
+            mail_backend="memory",
+        ).check_secure()

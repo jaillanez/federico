@@ -13,6 +13,9 @@ dependencies = [
     "pydantic-settings==2.11.0",
     "email-validator==2.3.0",
     "argon2-cffi==25.1.0",
+    "boto3==1.44.9",
+    "python-multipart==0.0.34",
+    "httpx==0.28.1",
 ]
 
 [dependency-groups]
@@ -22,7 +25,7 @@ dev = [
     "pytest==8.4.2",
     "pytest-asyncio==1.2.0",
     "pytest-cov==7.0.0",
-    "httpx==0.28.1",
+    "boto3-stubs[s3]==1.44.9",
 ]
 
 [tool.uv]
@@ -57,3 +60,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+# SQLAlchemy async runs code inside greenlets; without this, lines after DB awaits look uncovered.
+concurrency = ["greenlet", "thread"]
