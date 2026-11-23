@@ -1,0 +1,31 @@
+name: Uptime
+
+# External availability check every 10 minutes (from GitHub, not from the server itself).
+# A failed run makes GitHub email the repository owner. Set the repository variable SITE_URL
+# (e.g. https://servielect.com.ar) to enable it.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    if: vars.SITE_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - name: Home page
+        run: curl -fsS --max-time 20 --retry 2 --retry-delay 10 -o /dev/null "$SITE_URL/"
+      - name: API and database
+        run: curl -fsS --max-time 20 --retry 2 --retry-delay 10 "$SITE_URL/api/health" | grep -q '"database":"ok"'
+      - name: Certificate valid for more than 14 days
+        run: |
+          host="${SITE_URL#https://}"
+          end=$(echo | openssl s_client -servername "$host" -connect "$host:443" 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          left=$(( ($(date -d "$end" +%s) - $(date +%s)) / 86400 ))
+          echo "El certificado vence en $left días"
+          test "$left" -gt 14

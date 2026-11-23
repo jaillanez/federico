@@ -136,3 +136,22 @@ jobs:
       - name: Stop API
         if: always()
         run: pkill -f "uvicorn app.main:app" || true
+
+  # The whole production stack (Caddy, API, scheduler, web-build, PostgreSQL) on https://localhost,
+  # with MinIO standing in for R2: headers, pages, a real lead, and backup → restore.
+  prod-smoke:
+    runs-on: ubuntu-24.04
+    needs: [api, web]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start production stack
+        run: |
+          docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.smoke.yml \
+            --env-file infra/.env.smoke up -d --build --wait --wait-timeout 600
+      - name: Smoke test
+        run: infra/smoke-test.sh
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.smoke.yml \
+            --env-file infra/.env.smoke logs --tail 80
