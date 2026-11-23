@@ -1,0 +1,91 @@
+---
+import Logo from './Logo.astro';
+import Button from './ui/Button.astro';
+import Icon from './Icon.astro';
+import { nav } from '@/lib/site';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => current === href || current.startsWith(`${href}/`);
+---
+
+<header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+  <a
+    href="#contenido"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:shadow"
+  >
+    Saltar al contenido
+  </a>
+  <div class="container-sei flex h-16 items-center justify-between gap-4">
+    <Logo />
+
+    <nav aria-label="Principal" class="hidden xl:block">
+      <ul class="flex items-center gap-1">
+        {nav.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class="rounded-md px-3 py-2 text-[0.9375rem] font-medium text-ink-muted transition-colors hover:text-primary-700 aria-[current=page]:text-primary-700"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <div class="hidden sm:block">
+        <Button href="/diagnostico" variant="accent" size="sm">
+          Auditar mi factura
+        </Button>
+      </div>
+      <!-- Mobile menu uses the native Popover API: no JavaScript needed. -->
+      <button
+        type="button"
+        popovertarget="menu-movil"
+        class="grid size-11 place-items-center rounded-md text-ink hover:bg-surface xl:hidden"
+        aria-label="Abrir menú"
+      >
+        <Icon name="menu" class="size-6" />
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="menu-movil"
+    popover
+    class="m-0 ml-auto h-dvh max-h-none w-[min(22rem,100vw)] border-l border-line bg-white p-0 shadow-xl backdrop:bg-ink/40"
+  >
+    <div class="flex h-16 items-center justify-between border-b border-line px-4">
+      <span class="font-display text-lg font-bold">Menú</span>
+      <button
+        type="button"
+        popovertarget="menu-movil"
+        popovertargetaction="hide"
+        class="grid size-11 place-items-center rounded-md hover:bg-surface"
+        aria-label="Cerrar menú"
+      >
+        <Icon name="close" class="size-6" />
+      </button>
+    </div>
+    <nav aria-label="Principal (móvil)" class="p-4">
+      <ul class="flex flex-col">
+        {nav.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class="flex min-h-12 items-center border-b border-line text-base font-medium text-ink aria-[current=page]:text-primary-700"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <Button href="/diagnostico" variant="accent" block class="mt-6">
+        Auditar mi factura
+      </Button>
+    </nav>
+  </div>
+</header>

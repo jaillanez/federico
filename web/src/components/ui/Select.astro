@@ -1,0 +1,54 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Field from './Field.astro';
+import { controlClass, describedBy } from './control';
+
+type Option = { value: string; label: string };
+type Props = Omit<HTMLAttributes<'select'>, 'id'> & {
+  id: string;
+  label: string;
+  options: Option[];
+  groups?: { label: string; options: Option[] }[];
+  placeholder?: string;
+  hint?: string | undefined;
+  error?: string | undefined;
+};
+const {
+  id,
+  label,
+  options,
+  groups = [],
+  placeholder = 'Elegí una opción',
+  hint,
+  error,
+  required,
+  ...rest
+} = Astro.props;
+---
+
+<Field id={id} label={label} hint={hint} error={error} optional={!required}>
+  <select
+    id={id}
+    name={id}
+    required={required}
+    class:list={[
+      controlClass,
+      'appearance-none bg-[url(/icons/chevron.svg)] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10',
+    ]}
+    aria-describedby={describedBy(id, hint, error)}
+    aria-invalid={error ? 'true' : undefined}
+    {...rest}
+  >
+    <option value="">{placeholder}</option>
+    {groups.map((g) => (
+      <optgroup label={g.label}>
+        {g.options.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </optgroup>
+    ))}
+    {options.map((o) => (
+      <option value={o.value}>{o.label}</option>
+    ))}
+  </select>
+</Field>

@@ -1,0 +1,89 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { site, nav, legalLinks, telHref } from '@/lib/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-ink text-primary-100">
+  <div class="container-sei grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="flex flex-col gap-4">
+      <Logo inverse />
+      <p class="text-sm leading-relaxed text-primary-200">
+        Ingeniería eléctrica y consultoría energética independiente. No vendemos equipos: auditamos, diseñamos y
+        ejecutamos del lado del cliente.
+      </p>
+    </div>
+
+    <div>
+      <h2 class="text-sm font-semibold tracking-wide text-white uppercase">Contacto</h2>
+      <ul class="mt-4 flex flex-col gap-3 text-sm">
+        <li class="flex gap-2.5">
+          <Icon name="pin" class="mt-0.5 size-4 shrink-0" />
+          {site.address}
+        </li>
+        <li class="flex gap-2.5">
+          <Icon name="phone" class="mt-0.5 size-4 shrink-0" />
+          <a class="hover:text-white" href={telHref(site.phone)}>
+            Tel/Fax {site.phone}
+          </a>
+        </li>
+        <li class="flex gap-2.5">
+          <Icon name="phone" class="mt-0.5 size-4 shrink-0" />
+          <a class="hover:text-white" href={telHref(site.mobile)}>
+            Cel. {site.mobile}
+          </a>
+        </li>
+        <li class="flex gap-2.5">
+          <Icon name="mail" class="mt-0.5 size-4 shrink-0" />
+          <a class="break-all hover:text-white" href={`mailto:${site.email}`}>
+            {site.email}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="text-sm font-semibold tracking-wide text-white uppercase">Servicios</h2>
+      <ul class="mt-4 flex flex-col gap-2.5 text-sm">
+        {nav.map((item) => (
+          <li>
+            <a class="hover:text-white" href={item.href}>
+              {item.label}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a class="hover:text-white" href="/diagnostico">
+            Diagnóstico Exprés
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="text-sm font-semibold tracking-wide text-white uppercase">Cobertura</h2>
+      <ul class="mt-4 flex flex-wrap gap-2 text-sm">
+        {site.coverage.map((p) => (
+          <li class="rounded border border-white/15 px-2 py-1">{p}</li>
+        ))}
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-white/10">
+    <div class="container-sei flex flex-col gap-3 py-6 text-xs text-primary-200 sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        © {year} {site.legalName}. {site.owner}.
+      </p>
+      <ul class="flex gap-5">
+        {legalLinks.map((l) => (
+          <li>
+            <a class="hover:text-white" href={l.href}>
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</footer>

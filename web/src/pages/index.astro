@@ -1,0 +1,30 @@
+---
+// Phase 1 placeholder: the full home page (cards, counters, projects...) is phase 2.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Button from '@/components/ui/Button.astro';
+---
+
+<BaseLayout
+  title="Ingeniería eléctrica y solar"
+  description="Optimizamos costos energéticos y auditamos proyectos solares para grandes empresas sin venderte equipos. San Juan, Mendoza, La Rioja, Catamarca y todo el país."
+>
+  <section class="bg-blueprint text-white">
+    <div class="container-sei py-20 sm:py-28">
+      <p class="eyebrow text-accent">S.E.I. Servicio Eléctrico Integral</p>
+      <h1 class="mt-4 max-w-4xl text-display text-white">
+        Ingeniería eléctrica y consultoría solar 100% independiente para grandes empresas
+      </h1>
+      <p class="mt-6 max-w-2xl text-lead text-primary-100">
+        Optimizamos tus costos energéticos y auditamos proyectos solares sin venderte equipos.
+      </p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button href="/diagnostico" variant="accent" size="lg">
+          Auditar mi factura
+        </Button>
+        <Button href="/consultoria-solar" variant="inverse" size="lg">
+          Consultoría solar imparcial
+        </Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

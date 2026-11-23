@@ -1,0 +1,31 @@
+---
+// TODO(federico): replace this provisional wordmark with the official logo (SVG).
+import { site } from '@/lib/site';
+interface Props {
+  inverse?: boolean;
+}
+const { inverse = false } = Astro.props;
+---
+
+<a href="/" class="flex items-center gap-2.5" aria-label={`${site.legalName}, inicio`}>
+  <span
+    class:list={[
+      'grid size-9 place-items-center rounded-md',
+      inverse ? 'bg-white text-primary-700' : 'bg-primary-600 text-white',
+    ]}
+  >
+    <svg viewBox="0 0 24 24" class="size-5" fill="currentColor" aria-hidden="true">
+      <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />
+    </svg>
+  </span>
+  <span class="flex flex-col leading-none">
+    <span class:list={['font-display text-lg font-extrabold tracking-tight', inverse ? 'text-white' : 'text-ink']}>
+      {site.name}
+    </span>
+    <span
+      class:list={['text-[0.6875rem] font-medium whitespace-nowrap', inverse ? 'text-primary-100' : 'text-ink-muted']}
+    >
+      Ing. Federico Delgado
+    </span>
+  </span>
+</a>

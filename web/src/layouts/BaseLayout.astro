@@ -1,0 +1,42 @@
+---
+import '@/styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import Fonts from '@/components/Fonts.astro';
+import Seo from '@/components/Seo.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import WhatsAppFloat from '@/components/WhatsAppFloat.astro';
+import CtaBlock from '@/components/CtaBlock.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+  image?: string;
+  /** Every public page ends with the CTA block; set false only where it would repeat. */
+  cta?: boolean;
+}
+const { cta = true, ...seo } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b3d91" />
+    <Fonts />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <Seo {...seo} />
+    <ClientRouter />
+  </head>
+  <body class="flex flex-col">
+    <Header />
+    <main id="contenido" class="flex-1">
+      <slot />
+    </main>
+    {cta && <CtaBlock />}
+    <Footer />
+    <WhatsAppFloat />
+  </body>
+</html>
