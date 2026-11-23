@@ -1,0 +1,59 @@
+[project]
+name = "sei-api"
+version = "0.1.0"
+description = "API de S.E.I. Servicio Eléctrico Integral"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.118.0",
+    "uvicorn[standard]==0.37.0",
+    "sqlalchemy[asyncio]==2.0.43",
+    "asyncpg==0.30.0",
+    "alembic==1.16.5",
+    "pydantic==2.11.9",
+    "pydantic-settings==2.11.0",
+    "email-validator==2.3.0",
+    "argon2-cffi==25.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff==0.13.2",
+    "mypy==1.18.2",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.2.0",
+    "pytest-cov==7.0.0",
+    "httpx==0.28.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "ASYNC", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+"alembic/**" = ["N999"]
+"alembic/versions/**" = ["E501"]
+"app/scripts/seed.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["alembic/versions"]
+
+[[tool.mypy.overrides]]
+module = ["asyncpg.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
