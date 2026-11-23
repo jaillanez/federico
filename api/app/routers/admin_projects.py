@@ -218,8 +218,16 @@ async def _process_photo(image_id: uuid.UUID, data: bytes) -> None:
         img = await s.get(ProjectImage, image_id)
         if img is None:  # deleted while processing
             return
-        for v in result.variants:
-            await storage.put_public(f"{img.storage_key}-{v.width}.{v.ext}", v.data, v.mime)
+        try:
+            for v in result.variants:
+                await storage.put_public(f"{img.storage_key}-{v.width}.{v.ext}", v.data, v.mime)
+        except Exception:
+            # Never leave a photo "processing" forever: drop it and whatever was uploaded.
+            log.exception("could not store variants of image %s; removing it", image_id)
+            await storage.delete_public_prefix(f"{img.storage_key}-")
+            await s.delete(img)
+            await s.commit()
+            return
         img.ancho, img.alto = result.width, result.height
         project = await s.get(Project, img.project_id)
         await s.commit()

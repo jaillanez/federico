@@ -248,3 +248,20 @@ async def test_unprocessed_photos_are_not_public(
         await s.commit()
     public = (await client.get(f"/api/projects/{p['slug']}")).json()
     assert public["imagenes"] == [] and public["portada"] is None
+
+
+async def test_storage_failure_never_leaves_a_photo_processing(
+    admin_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def full_disk(key: str, data: bytes, content_type: str) -> None:
+        raise OSError("storage full")
+
+    monkeypatch.setattr(storage, "put_public", full_disk)
+    p = await create(admin_client)
+    res = await admin_client.post(
+        f"/api/admin/projects/{p['id']}/images",
+        files=[("files", ("f.jpg", photo_with_gps(500, 500, 1), "image/jpeg"))],
+    )
+    assert res.status_code == 202
+    detail = (await admin_client.get(f"/api/admin/projects/{p['id']}")).json()
+    assert detail["imagenes"] == []  # removed instead of stuck in "procesando"
