@@ -259,11 +259,16 @@ async def create_lead(
             )
         session.add(lead)
         await session.commit()
-    except Exception:
+    except Exception as exc:
         await session.rollback()
         await storage.delete_private(uploaded)
         log.exception("could not save lead %s", lead.id)
-        raise
+        raise ApiError(
+            503,
+            code="storage_unavailable",
+            message="No pudimos guardar tu documentación en este momento. "
+            "Probá de nuevo en unos minutos o enviala por WhatsApp.",
+        ) from exc
 
     log.info("lead created id=%s origen=%s files=%d", lead.id, origen, len(files))
     background.add_task(send_lead_emails, lead, len(files))

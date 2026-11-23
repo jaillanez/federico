@@ -258,8 +258,9 @@ async def test_failed_upload_rolls_back_and_removes_uploaded_files(
         ("factura", ("f.pdf", PDF, "application/pdf")),
         ("presupuesto_solar", ("p.png", PNG, "image/png")),
     ]
-    with pytest.raises(OSError, match="storage down"):
-        await post(client, form(), files)
+    res = await post(client, form(), files)
+    assert res.status_code == 503
+    assert "WhatsApp" in res.json()["error"]["message"]
     assert await lead_count(session) == 0
     bucket = get_settings().s3_bucket_private
     listing = storage.client().list_objects_v2(Bucket=bucket, Prefix=stored[0])
