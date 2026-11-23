@@ -33,6 +33,20 @@ api/    FastAPI + SQLAlchemy 2 async + Alembic (gestionado con uv)
 infra/  Docker Compose, Caddyfile, scripts de la base
 ```
 
+## Panel de administración
+
+- Dirección: `/admin` (en local, http://localhost:4321/admin). No se indexa.
+- Primer usuario: `make create-admin` (o `make create-admin-local`). Nunca hay credenciales por defecto.
+- Roles: **admin** ve todo; **editor** maneja obras, artículos y testimonios, pero no las consultas
+  (tienen documentación de clientes) ni la configuración.
+- Seguridad: sesión de 12 h en cookie `HttpOnly` + `SameSite=Strict`, verificación de `Origin`
+  contra CSRF y bloqueo de 15 minutos tras 5 intentos fallidos.
+- Fotos de obras: se procesan en segundo plano (orientación, sin metadatos ni GPS, AVIF y WebP en
+  400/800/1600/2400 px).
+- Al publicar, despublicar o editar contenido público, la API llama a `REBUILD_WEBHOOK_URL` y agrupa
+  los pedidos de 60 segundos en uno solo. En local lo atiende `web/scripts/build-server.mjs`
+  (http://localhost:4322), que regenera el sitio y lo sirve como en producción.
+
 ## Build del sitio público
 
 `astro build` lee obras, artículos, testimonios y ajustes de la API (`API_INTERNAL_URL`), así que

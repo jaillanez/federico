@@ -10,7 +10,7 @@
 #
 # Every service is a dedicated instance with its data in .local/ and its own ports, so it never
 # touches PostgreSQL, MinIO or Mailpit services you may already run (5432, 9000, 1025/8025):
-#   PostgreSQL 5433 · MinIO 9010 (console 9011) · Mailpit SMTP 1125 (web 8125)
+#   PostgreSQL 5433 · MinIO 9010 (console 9011) · Mailpit SMTP 1125 (web 8125) · build server 4322
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,6 +25,7 @@ MINIO_PORT=9010
 MINIO_CONSOLE_PORT=9011
 SMTP_PORT=1125
 MAILPIT_PORT=8125
+BUILD_PORT=4322
 MINIO_USER="sei-minio"
 MINIO_PASSWORD="sei-minio-secret"
 
@@ -69,6 +70,12 @@ export_env() {
   # Cloudflare's always-pass TEST keys (invisible widget): https://developers.cloudflare.com/turnstile/troubleshooting/testing/
   export TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}"
   export PUBLIC_TURNSTILE_SITE_KEY="${PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000BB}"
+  # Local http: the session cookie cannot be Secure.
+  export SESSION_COOKIE_SECURE=false
+  # Rebuild webhook → local build server, which also serves the built site (like production).
+  export REBUILD_WEBHOOK_URL="http://localhost:$BUILD_PORT/__rebuild"
+  export REBUILD_WEBHOOK_TOKEN="dev-rebuild-token"
+  export BUILD_SERVER_PORT="$BUILD_PORT"
 }
 
 need() {
@@ -158,7 +165,8 @@ cmd_up() {
   ensure_services
   ensure_web_deps
   echo ""
-  echo "  Sitio:    http://localhost:4321          Estilos: http://localhost:4321/estilos"
+  echo "  Sitio:    http://localhost:4321 (dev)    Estático: http://localhost:$BUILD_PORT (se regenera al publicar)"
+  echo "  Panel:    http://localhost:4321/admin     Estilos: http://localhost:4321/estilos"
   echo "  API:      http://localhost:$API_PORT/api/docs"
   echo "  Mailpit:  http://localhost:$MAILPIT_PORT          MinIO: http://localhost:$MINIO_CONSOLE_PORT ($MINIO_USER / $MINIO_PASSWORD)"
   echo "  Ctrl-C detiene la API y Astro (los servicios siguen: make stop-local)"
@@ -167,6 +175,8 @@ cmd_up() {
   (cd "$ROOT/api" && exec uv run uvicorn app.main:app --port "$API_PORT" --reload) &
   pids+=($!)
   (cd "$ROOT/web" && exec npx astro dev) &
+  pids+=($!)
+  (cd "$ROOT/web" && BUILD_ON_START=1 exec node scripts/build-server.mjs) &
   pids+=($!)
   trap 'cleanup "${pids[@]}"' INT TERM
   wait
@@ -216,7 +226,8 @@ case "${1:-up}" in
   env)
     for v in ENVIRONMENT DATABASE_URL MIGRATIONS_DATABASE_URL CORS_ORIGINS SECRET_KEY API_INTERNAL_URL \
       PUBLIC_SITE_URL S3_ENDPOINT_URL S3_ACCESS_KEY S3_SECRET_KEY S3_BUCKET_PUBLIC S3_BUCKET_PRIVATE \
-      PUBLIC_MEDIA_URL MAIL_BACKEND SMTP_HOST SMTP_PORT TURNSTILE_SECRET_KEY PUBLIC_TURNSTILE_SITE_KEY; do
+      PUBLIC_MEDIA_URL MAIL_BACKEND SMTP_HOST SMTP_PORT TURNSTILE_SECRET_KEY PUBLIC_TURNSTILE_SITE_KEY \
+      SESSION_COOKIE_SECURE REBUILD_WEBHOOK_URL REBUILD_WEBHOOK_TOKEN; do
       printf "export %s='%s'\n" "$v" "${!v}"
     done
     ;;

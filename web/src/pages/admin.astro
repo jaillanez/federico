@@ -1,0 +1,12 @@
+---
+// Private admin panel (Preact app, hash routes). Not indexed: noindex + robots.txt + no sitemap.
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminApp from '@/islands/admin/AdminApp';
+---
+
+<AdminLayout>
+  <AdminApp client:load />
+  <noscript>
+    <p class="p-6">El panel necesita JavaScript.</p>
+  </noscript>
+</AdminLayout>

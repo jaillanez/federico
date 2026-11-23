@@ -54,7 +54,9 @@ async def _projects(session: AsyncSession) -> None:
                 es_portada=True,
                 alt_text="Tablero",
             ),
-            ProjectImage(project_id=a.id, storage_key=f"projects/{a.id}/img0", orden=0),
+            ProjectImage(
+                project_id=a.id, storage_key=f"projects/{a.id}/img0", orden=0, ancho=500, alto=400
+            ),
         ]
     )
     await session.commit()

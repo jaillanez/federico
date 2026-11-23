@@ -57,6 +57,21 @@ class Settings(BaseSettings):
     # Empty disables the captcha check (only allowed outside production).
     turnstile_secret_key: SecretStr = SecretStr("")
 
+    # --- Admin sessions ---
+    session_cookie_name: str = "sei_session"
+    session_hours: int = 12
+    # Secure cookies require HTTPS; only disable for local http development.
+    session_cookie_secure: bool = True
+    login_max_attempts: int = 5
+    login_lock_minutes: int = 15
+
+    # --- Site rebuild (after publishing content) ---
+    # Webhook that rebuilds the static site (local build server or a Cloudflare Pages deploy hook).
+    rebuild_webhook_url: str | None = None
+    rebuild_webhook_token: SecretStr = SecretStr("")
+    # Requests within this window are grouped into a single rebuild.
+    rebuild_delay_seconds: float = 60
+
     # --- Leads ---
     leads_per_ip_per_hour: int = 5
     # Ley 25.326: leads in "nuevo" or "descartado" are deleted after this many months.
@@ -65,6 +80,11 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def trusted_origins(self) -> set[str]:
+        """Origins allowed to send state-changing requests to the panel (CSRF check)."""
+        return {o.rstrip("/") for o in [*self.cors_origins, self.public_site_url]}
 
     @property
     def alembic_url(self) -> str:
@@ -78,6 +98,8 @@ class Settings(BaseSettings):
             )
         if self.is_production and not self.turnstile_secret_key.get_secret_value():
             raise InsecureConfigError("TURNSTILE_SECRET_KEY es obligatoria en producción")
+        if self.is_production and not self.session_cookie_secure:
+            raise InsecureConfigError("SESSION_COOKIE_SECURE no puede ser false en producción")
         if self.is_production and self.mail_backend != "smtp":
             raise InsecureConfigError("MAIL_BACKEND tiene que ser smtp en producción")
         return self

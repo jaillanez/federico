@@ -23,7 +23,11 @@ def test_error_and_repr_do_not_leak_secret() -> None:
 
 def test_production_accepts_strong_secret() -> None:
     strong = Settings(
-        environment="production", secret_key="x" * 32, turnstile_secret_key="t", mail_backend="smtp"
+        environment="production",
+        secret_key="x" * 32,
+        turnstile_secret_key="t",
+        mail_backend="smtp",
+        session_cookie_secure=True,
     )
     assert strong.check_secure().is_production
 
