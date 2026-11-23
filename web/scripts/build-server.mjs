@@ -18,9 +18,11 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const DIST = join(ROOT, 'dist');
-const NEXT = join(ROOT, 'dist-next');
-const OLD = join(ROOT, 'dist-old');
+// In production SITE_DIR is a volume shared with Caddy (current/ is what Caddy serves).
+const SITE_DIR = process.env.SITE_DIR ? resolve(process.env.SITE_DIR) : null;
+const DIST = SITE_DIR ? join(SITE_DIR, 'current') : join(ROOT, 'dist');
+const NEXT = SITE_DIR ? join(SITE_DIR, 'next') : join(ROOT, 'dist-next');
+const OLD = SITE_DIR ? join(SITE_DIR, 'old') : join(ROOT, 'dist-old');
 const PORT = Number(process.env.BUILD_SERVER_PORT ?? 4322);
 const HOST = process.env.BUILD_SERVER_HOST ?? '127.0.0.1';
 const TOKEN = process.env.REBUILD_WEBHOOK_TOKEN ?? '';
