@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     migrations_database_url: str | None = None
     # Allowed CORS origins (only our own domain), as a JSON list.
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4321"])
+    # Public base URL of the public bucket / CDN (project photos).
+    public_media_url: str = "http://localhost:9000/sei-public"
     # Secret used to hash IPs of leads and sign sessions. SecretStr keeps it out of reprs.
     secret_key: SecretStr = SecretStr("change-me")
 

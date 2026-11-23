@@ -58,3 +58,16 @@ async def table_names(s: AsyncSession) -> set[str]:
         )
     )
     return {r[0] for r in rows}
+
+
+CONTENT_TABLES = (
+    "project_images, projects, service_categories, sectors, articles, testimonials, site_settings"
+)
+
+
+@pytest.fixture
+async def clean_content() -> None:
+    """Empty content tables so each test controls exactly what exists."""
+    async with SessionLocal() as s:
+        await s.execute(text(f"TRUNCATE {CONTENT_TABLES} CASCADE"))
+        await s.commit()
