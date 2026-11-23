@@ -36,7 +36,7 @@ def notification(lead: Lead, file_count: int) -> Mail:
     lines += [
         "",
         f"Archivos adjuntos en la consulta: {file_count} (no se envían por email).",
-        f"Ver la consulta en el panel: {s.public_site_url.rstrip('/')}/admin/consultas/{lead.id}",
+        f"Ver la consulta en el panel: {s.public_site_url.rstrip('/')}/admin#/consultas/{lead.id}",
     ]
     return Mail(
         to=s.mail_leads_to,

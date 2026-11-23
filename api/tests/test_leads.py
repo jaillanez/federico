@@ -96,7 +96,7 @@ async def test_happy_path_stores_lead_files_and_sends_emails(
     # One notification to Federico (link to the panel, no attachments) and one confirmation.
     assert [m.to for m in outbox] == ["federico@example.com", "ana@example.com"]
     notice = outbox[0]
-    assert f"/admin/consultas/{lead.id}" in notice.text
+    assert f"/admin#/consultas/{lead.id}" in notice.text
     assert "Reducir costos fijos" in notice.text
     assert notice.reply_to == "ana@example.com"
     assert "%PDF" not in notice.text

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.errors import register_error_handlers
-from app.routers import leads, public
+from app.routers import admin_content, admin_leads, admin_projects, auth, leads, public
 
 
 def create_app() -> FastAPI:
@@ -20,12 +20,15 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Content-Type", "X-CSRF-Token"],
     )
     register_error_handlers(app)
     app.include_router(public.router, prefix="/api")
     app.include_router(leads.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api")
+    for admin in (admin_projects, admin_leads, admin_content):
+        app.include_router(admin.router, prefix="/api")
     return app
 
 

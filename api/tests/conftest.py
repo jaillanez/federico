@@ -8,6 +8,7 @@ Only the external Turnstile call is replaced (see `captcha_ok`), and email uses 
 """
 
 import os
+import uuid
 from collections.abc import AsyncIterator, Iterator
 
 os.environ["DATABASE_URL"] = os.environ.get(
@@ -20,9 +21,14 @@ os.environ.setdefault("S3_ACCESS_KEY", "sei-minio")
 os.environ.setdefault("S3_SECRET_KEY", "sei-minio-secret")
 os.environ["S3_BUCKET_PUBLIC"] = "sei-test-public"
 os.environ["S3_BUCKET_PRIVATE"] = "sei-test-private"
+os.environ["PUBLIC_MEDIA_URL"] = f"{os.environ['S3_ENDPOINT_URL']}/sei-test-public"
 os.environ["MAIL_BACKEND"] = "memory"
 os.environ["TURNSTILE_SECRET_KEY"] = ""
 os.environ["MAIL_LEADS_TO"] = "federico@example.com"
+os.environ["SESSION_COOKIE_SECURE"] = "false"  # the test client talks plain http
+os.environ["PUBLIC_SITE_URL"] = "http://localhost:4321"
+os.environ["REBUILD_DELAY_SECONDS"] = "0"
+os.environ.pop("REBUILD_WEBHOOK_URL", None)
 
 import pytest
 from alembic.config import Config
@@ -33,8 +39,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from alembic import command
 from app.db import SessionLocal, engine
 from app.main import app
+from app.models import AdminUser
 from app.routers.leads import get_captcha_verifier
 from app.scripts.init_storage import main as init_storage
+from app.security import hash_password
 from app.services import mail
 
 
@@ -120,3 +128,56 @@ def captcha_ok() -> Iterator[None]:
     app.dependency_overrides[get_captcha_verifier] = lambda: verifier
     yield
     app.dependency_overrides.pop(get_captcha_verifier, None)
+
+
+ORIGIN = {"Origin": "http://localhost:4321"}
+PASSWORD = "clave-de-prueba-123"
+
+
+async def make_user(rol: str = "admin", email: str | None = None) -> AdminUser:
+    email = email or f"{rol}-{uuid.uuid4().hex[:8]}@example.com"
+    async with SessionLocal() as s:
+        user = AdminUser(
+            email=email, nombre=f"Usuario {rol}", rol=rol, password_hash=hash_password(PASSWORD)
+        )
+        s.add(user)
+        await s.commit()
+        return user
+
+
+async def logged_client(rol: str) -> AsyncClient:
+    user = await make_user(rol)
+    c = AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=ORIGIN)
+    res = await c.post("/api/auth/login", json={"email": user.email, "password": PASSWORD})
+    assert res.status_code == 200, res.text
+    return c
+
+
+@pytest.fixture
+async def admin_client() -> AsyncIterator[AsyncClient]:
+    c = await logged_client("admin")
+    yield c
+    await c.aclose()
+
+
+@pytest.fixture
+async def editor_client() -> AsyncIterator[AsyncClient]:
+    c = await logged_client("editor")
+    yield c
+    await c.aclose()
+
+
+@pytest.fixture
+def rebuilds(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Count rebuild requests made by the admin routers."""
+    calls: list[str] = []
+
+    def fake() -> object:
+        calls.append("rebuild")
+        from app.services.rebuild import rebuilder
+
+        return rebuilder.status()
+
+    for module in ("admin_projects", "admin_content"):
+        monkeypatch.setattr(f"app.routers.{module}.request_rebuild", fake)
+    return calls

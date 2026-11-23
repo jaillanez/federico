@@ -38,6 +38,42 @@ async def put_private(key: str, data: bytes, content_type: str) -> None:
     )
 
 
+async def put_public(key: str, data: bytes, content_type: str) -> None:
+    """Public bucket (served through the CDN). Variants are immutable: cache them for a year."""
+    bucket = get_settings().s3_bucket_public
+    await anyio.to_thread.run_sync(
+        lambda: client().put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=data,
+            ContentType=content_type,
+            CacheControl="public, max-age=31536000, immutable",
+        )
+    )
+
+
+async def delete_public_prefix(prefix: str) -> None:
+    """Delete every object under a prefix in the public bucket."""
+    bucket = get_settings().s3_bucket_public
+
+    def run() -> None:
+        s3 = client()
+        token: str | None = None
+        while True:
+            kwargs = {"Bucket": bucket, "Prefix": prefix}
+            if token:
+                kwargs["ContinuationToken"] = token
+            page = s3.list_objects_v2(**kwargs)  # type: ignore[arg-type]
+            keys = [{"Key": o["Key"]} for o in page.get("Contents", [])]
+            if keys:
+                s3.delete_objects(Bucket=bucket, Delete={"Objects": keys, "Quiet": True})  # type: ignore[typeddict-item]
+            if not page.get("IsTruncated"):
+                return
+            token = page.get("NextContinuationToken")
+
+    await anyio.to_thread.run_sync(run)
+
+
 async def delete_private(keys: list[str]) -> None:
     if not keys:
         return

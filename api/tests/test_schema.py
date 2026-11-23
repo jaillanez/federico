@@ -17,10 +17,11 @@ EXPECTED_TABLES = {
     "articles",
     "testimonials",
     "site_settings",
+    "admin_sessions",  # phase 4: server-side panel sessions
 }
 
 
-async def test_migration_creates_the_11_tables(session: AsyncSession) -> None:
+async def test_migration_creates_all_tables(session: AsyncSession) -> None:
     assert await table_names(session) == EXPECTED_TABLES
 
 

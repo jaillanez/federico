@@ -3,16 +3,25 @@
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy import Select, func, select, text
+from sqlalchemy import Select, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db import get_session
 from app.errors import ApiError
-from app.models import Article, Project, Sector, ServiceCategory, SiteSetting, Testimonial
+from app.models import (
+    Article,
+    Project,
+    ProjectImage,
+    Sector,
+    ServiceCategory,
+    SiteSetting,
+    Testimonial,
+)
+from app.pagination import PageNum, PerPage, paginate
 from app.schemas.public import (
     ArticleDetail,
     ArticleSummary,
@@ -28,8 +37,6 @@ from app.services.media import image_out, public_url
 router = APIRouter()
 
 Session = Annotated[AsyncSession, Depends(get_session)]
-PageNum = Annotated[int, Query(ge=1)]
-PerPage = Annotated[int, Query(ge=1, le=50)]
 
 # Only these site_settings keys are exposed publicly.
 PUBLIC_SETTING_KEYS = ("contacto", "whatsapp", "metricas", "tg_phi_limite")
@@ -51,14 +58,6 @@ async def health(session: Session) -> JSONResponse:
     return JSONResponse(body.model_dump(), status_code=200 if db_ok else 503)
 
 
-async def _paginate(
-    session: AsyncSession, stmt: Select[Any], page: int, per_page: int
-) -> tuple[list[Any], int]:
-    total = await session.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
-    rows = (await session.scalars(stmt.limit(per_page).offset((page - 1) * per_page))).all()
-    return list(rows), total or 0
-
-
 # --- Projects ---------------------------------------------------------------
 
 
@@ -74,8 +73,14 @@ def _project_query() -> Select[tuple[Project]]:
     )
 
 
+def _ready_images(p: Project) -> list[ProjectImage]:
+    """Images still being processed (no dimensions yet) are never public."""
+    return [i for i in p.images if i.ancho is not None]
+
+
 def _summary_fields(p: Project) -> dict[str, Any]:
-    cover = next((i for i in p.images if i.es_portada), p.images[0] if p.images else None)
+    images = _ready_images(p)
+    cover = next((i for i in images if i.es_portada), images[0] if images else None)
     return {
         "slug": p.slug,
         "titulo": p.titulo,
@@ -88,7 +93,7 @@ def _summary_fields(p: Project) -> dict[str, Any]:
         "categoria": CatalogItem.model_validate(p.category) if p.category else None,
         "sector": CatalogItem.model_validate(p.sector) if p.sector else None,
         "portada": image_out(cover) if cover else None,
-        "cantidad_fotos": len(p.images),
+        "cantidad_fotos": len(images),
     }
 
 
@@ -114,7 +119,7 @@ async def list_projects(
     stmt = stmt.order_by(
         Project.destacado.desc(), Project.fecha_obra.desc().nulls_last(), Project.titulo
     )
-    rows, total = await _paginate(session, stmt, page, per_page)
+    rows, total = await paginate(session, stmt, page, per_page)
     return Page(
         items=[ProjectSummary(**_summary_fields(p)) for p in rows],
         total=total,
@@ -138,7 +143,7 @@ async def get_project(slug: str, session: Session) -> ProjectDetail:
         seo_title=project.seo_title,
         seo_description=project.seo_description,
         updated_at=project.updated_at,
-        imagenes=[image_out(i) for i in project.images],
+        imagenes=[image_out(i) for i in _ready_images(project)],
     )
 
 
@@ -169,7 +174,7 @@ async def list_articles(
     if tag:
         stmt = stmt.where(Article.tags.contains([tag]))
     stmt = stmt.order_by(Article.publicado_at.desc())
-    rows, total = await _paginate(session, stmt, page, per_page)
+    rows, total = await paginate(session, stmt, page, per_page)
     return Page(
         items=[ArticleSummary(**_article_fields(a)) for a in rows],
         total=total,
