@@ -36,9 +36,21 @@ infra/  Docker Compose, Caddyfile, scripts de la base
 Todas están documentadas en [.env.example](.env.example). La base usa dos usuarios:
 `POSTGRES_USER` (dueño, solo para migraciones) y `DB_API_USER` (permisos mínimos, lo usa la API).
 
-## Desarrollo sin Docker (opcional)
+## Levantar en local sin Docker
+
+Para máquinas donde Docker no funciona. Requisitos: PostgreSQL de Homebrew (16 o superior;
+`brew install postgresql@16`), [uv](https://docs.astral.sh/uv/) y Node 22.
 
 ```bash
-cd api && uv sync && DATABASE_URL=postgresql+asyncpg://usuario@localhost:5432/sei uv run uvicorn app.main:app --reload
-cd web && npm install && npm run dev
+make dev-local    # PostgreSQL propio del proyecto (.local/, puerto 5433) + migraciones + API + Astro
+make seed-local   # en otra terminal: datos de ejemplo + admin de desarrollo
 ```
+
+- Sitio: http://localhost:4321 (Astro reenvía `/api` a la API, igual que Caddy en producción).
+- API: http://localhost:8000/api/health · http://localhost:8000/api/docs
+- Ctrl-C detiene la API y Astro; `make stop-local` apaga también PostgreSQL.
+- Otros: `make test-local`, `make create-admin-local`.
+
+El cluster vive en `.local/pgdata` (ignorado por git) y escucha solo en `localhost:5433`, así que no
+interfiere con otro PostgreSQL que ya tengas en el 5432. MinIO y Mailpit (fases 3 y 4) todavía no
+tienen equivalente sin Docker.

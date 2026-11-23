@@ -24,5 +24,9 @@ export default defineConfig({
   devToolbar: { enabled: false },
   build: { format: 'file' },
   integrations: [preact(), sitemap({ filter: (page) => !page.includes('/admin') }), devOnlyStyleGuide],
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+    // In `astro dev` without Caddy, forward /api to FastAPI (same-origin like production).
+    server: { proxy: { '/api': process.env.API_INTERNAL_URL ?? 'http://localhost:8000' } },
+  },
 });
