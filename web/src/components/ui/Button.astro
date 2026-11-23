@@ -1,0 +1,47 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Variant = 'primary' | 'accent' | 'outline' | 'ghost' | 'whatsapp' | 'inverse';
+type Size = 'sm' | 'md' | 'lg';
+
+type Props = {
+  variant?: Variant;
+  size?: Size;
+  href?: string;
+  block?: boolean;
+} & Omit<HTMLAttributes<'a'> & HTMLAttributes<'button'>, 'class'> & { class?: string };
+
+const { variant = 'primary', size = 'md', href, block = false, class: extra, ...rest } = Astro.props;
+
+const variants: Record<Variant, string> = {
+  primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
+  accent: 'bg-accent text-ink hover:bg-accent-hover',
+  outline: 'border border-primary-600 text-primary-700 hover:bg-primary-50',
+  ghost: 'text-primary-700 hover:bg-primary-50',
+  whatsapp: 'bg-whatsapp text-white hover:brightness-95',
+  inverse: 'border border-white/50 text-white hover:bg-white/10',
+};
+const sizes: Record<Size, string> = {
+  sm: 'min-h-9 px-3.5 text-sm',
+  md: 'min-h-11 px-5 text-[0.9375rem]',
+  lg: 'min-h-13 px-6 text-base',
+};
+const classes = [
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold transition-colors',
+  'disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50',
+  variants[variant],
+  sizes[size],
+  block && 'w-full',
+  extra,
+];
+---
+
+{href ? (
+  <a href={href} class:list={classes} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button type="button" class:list={classes} {...rest}>
+    <slot />
+  </button>
+)}

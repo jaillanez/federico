@@ -1,0 +1,17 @@
+"""Password hashing with Argon2id."""
+
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerifyMismatchError
+
+_hasher = PasswordHasher()  # argon2-cffi defaults to Argon2id
+
+
+def hash_password(password: str) -> str:
+    return _hasher.hash(password)
+
+
+def verify_password(password_hash: str, password: str) -> bool:
+    try:
+        return _hasher.verify(password_hash, password)
+    except (VerifyMismatchError, InvalidHashError):
+        return False

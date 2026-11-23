@@ -1,0 +1,15 @@
+# Local development entry point: http://localhost:8080
+{
+	auto_https off
+	admin off
+}
+
+:8080 {
+	encode zstd gzip
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy web:4321
+	}
+}

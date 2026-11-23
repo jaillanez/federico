@@ -1,0 +1,237 @@
+---
+// Component catalog. Injected only in `astro dev` (see astro.config.mjs); never built.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Button from '@/components/ui/Button.astro';
+import Card from '@/components/ui/Card.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Input from '@/components/ui/Input.astro';
+import Select from '@/components/ui/Select.astro';
+import Checkbox from '@/components/ui/Checkbox.astro';
+import Alert from '@/components/ui/Alert.astro';
+import Icon from '@/components/Icon.astro';
+import WhatsAppIcon from '@/components/WhatsAppIcon.astro';
+import { PROVINCIAS_FOCO, PROVINCIAS_RESTO } from '@/lib/provincias';
+
+const scale = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+const tokens = [
+  { name: 'accent', hex: '#F59E0B', cls: 'bg-accent' },
+  { name: 'accent-soft', hex: '#FEF3D7', cls: 'bg-accent-soft' },
+  { name: 'ink', hex: '#1F2933', cls: 'bg-ink' },
+  { name: 'ink-muted', hex: '#4B5866', cls: 'bg-ink-muted' },
+  { name: 'surface', hex: '#F5F7FA', cls: 'bg-surface' },
+  { name: 'line', hex: '#D9DFE7', cls: 'bg-line' },
+  { name: 'whatsapp', hex: '#128C4A', cls: 'bg-whatsapp' },
+  { name: 'danger', hex: '#B42318', cls: 'bg-danger' },
+];
+const primaryCls: Record<number, string> = {
+  50: 'bg-primary-50',
+  100: 'bg-primary-100',
+  200: 'bg-primary-200',
+  300: 'bg-primary-300',
+  400: 'bg-primary-400',
+  500: 'bg-primary-500',
+  600: 'bg-primary-600',
+  700: 'bg-primary-700',
+  800: 'bg-primary-800',
+  900: 'bg-primary-900',
+};
+const toProv = (list: readonly string[]) => list.map((p) => ({ value: p, label: p }));
+---
+
+<BaseLayout title="Estilos" description="Catálogo de componentes base (solo desarrollo)." noindex cta={false}>
+  <div class="container-sei flex flex-col gap-16 py-12">
+    <header>
+      <p class="eyebrow">Solo en desarrollo</p>
+      <h1 class="mt-2 text-h1">Sistema de diseño S.E.I.</h1>
+      <p class="mt-3 max-w-2xl text-lead text-ink-muted">
+        Colores, tipografía y componentes base. Esta página no se genera en el build.
+      </p>
+    </header>
+
+    <section aria-labelledby="colores" class="flex flex-col gap-6">
+      <h2 id="colores" class="text-h2">
+        Colores
+      </h2>
+      <div>
+        <h3 class="mb-3 text-h3">
+          primary <span class="text-base font-normal text-ink-muted">(base #0B3D91 = 600)</span>
+        </h3>
+        <ul class="grid grid-cols-5 gap-2 sm:grid-cols-10">
+          {scale.map((s) => (
+            <li class="flex flex-col gap-1 text-xs">
+              <span class:list={['h-14 rounded border border-line', primaryCls[s]]} />
+              <span class="font-medium">{s}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {tokens.map((t) => (
+          <li class="flex items-center gap-3 text-sm">
+            <span class:list={['size-12 shrink-0 rounded border border-line', t.cls]} />
+            <span class="flex flex-col">
+              <span class="font-medium">{t.name}</span>
+              <span class="text-ink-muted">{t.hex}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="tipografia" class="flex flex-col gap-4">
+      <h2 id="tipografia" class="text-h2">
+        Tipografía
+      </h2>
+      <p class="text-sm text-ink-muted">Titulares: Archivo (ancho 92%). Texto: Inter. Tamaños fluidos con clamp().</p>
+      <p class="font-display text-display font-bold tracking-tight">Display: cartas sobre la mesa</p>
+      <p class="font-display text-h1 font-bold tracking-tight">H1: Obras de media y baja tensión</p>
+      <p class="font-display text-h2 font-bold tracking-tight">H2: Corrección del factor de potencia</p>
+      <p class="font-display text-h3 font-bold tracking-tight">H3: Tableros de bombeo y CCM</p>
+      <p class="max-w-2xl text-lead text-ink-muted">
+        Lead: optimizamos tus costos energéticos y auditamos proyectos solares sin venderte equipos.
+      </p>
+      <p class="max-w-2xl">
+        Cuerpo: la potencia contratada inadecuada y la energía reactiva son dos de los recargos más frecuentes en las
+        facturas de grandes consumos. tg φ = kVArh / kWh.
+      </p>
+      <p class="eyebrow">Eyebrow / sobretítulo</p>
+    </section>
+
+    <section aria-labelledby="botones" class="flex flex-col gap-4">
+      <h2 id="botones" class="text-h2">
+        Botones
+      </h2>
+      <div class="flex flex-wrap items-center gap-3">
+        <Button variant="accent">Auditar mi factura</Button>
+        <Button>Primario</Button>
+        <Button variant="outline">Secundario</Button>
+        <Button variant="ghost">
+          Terciario <Icon name="arrow" class="size-4" />
+        </Button>
+        <Button variant="whatsapp">
+          <WhatsAppIcon /> WhatsApp
+        </Button>
+        <Button disabled>Deshabilitado</Button>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <Button size="sm">Chico</Button>
+        <Button size="md">Mediano</Button>
+        <Button size="lg">Grande</Button>
+      </div>
+      <div class="bg-blueprint flex flex-wrap gap-3 rounded-card p-6">
+        <Button variant="accent">Solicitar diagnóstico</Button>
+        <Button variant="inverse">Sobre fondo oscuro</Button>
+      </div>
+    </section>
+
+    <section aria-labelledby="etiquetas" class="flex flex-col gap-4">
+      <h2 id="etiquetas" class="text-h2">
+        Etiquetas
+      </h2>
+      <div class="flex flex-wrap gap-2">
+        <Badge tone="primary">Media tensión</Badge>
+        <Badge tone="accent">Solar</Badge>
+        <Badge>San Juan</Badge>
+        <Badge tone="success">Publicado</Badge>
+      </div>
+    </section>
+
+    <section aria-labelledby="tarjetas" class="flex flex-col gap-4">
+      <h2 id="tarjetas" class="text-h2">
+        Tarjetas
+      </h2>
+      <ul class="grid gap-4 md:grid-cols-3">
+        <Card as="li">
+          <Icon name="shield" class="size-8 text-primary-600" />
+          <h3 class="mt-4 text-h3">Sin conflicto de interés</h3>
+          <p class="mt-2 text-ink-muted">No vendemos paneles ni equipos. Trabajamos del lado del cliente.</p>
+        </Card>
+        <Card as="li" tone="surface">
+          <Icon name="bolt" class="size-8 text-primary-600" />
+          <h3 class="mt-4 text-h3">Ingeniería electromecánica dura</h3>
+          <p class="mt-2 text-ink-muted">Tarjeta sobre fondo gris claro.</p>
+        </Card>
+        <Card as="li" href="#tarjetas">
+          <div slot="media" class="bg-blueprint aspect-[16/10]" role="img" aria-label="Espacio para foto de obra"></div>
+          <Badge tone="primary">Tableros y bombeo</Badge>
+          <h3 class="mt-3 text-h3 group-hover:text-primary-700">Tarjeta con enlace y foto</h3>
+          <p class="mt-2 text-sm text-ink-muted">Pocito, San Juan · 75 kW</p>
+        </Card>
+      </ul>
+      <div class="rule-node mt-4"></div>
+    </section>
+
+    <section aria-labelledby="formularios" class="flex flex-col gap-4">
+      <h2 id="formularios" class="text-h2">
+        Formularios
+      </h2>
+      <form class="grid max-w-3xl gap-5 sm:grid-cols-2" novalidate>
+        <Input id="demo-nombre" label="Nombre y apellido" autocomplete="name" required />
+        <Input id="demo-empresa" label="Empresa o razón social" autocomplete="organization" />
+        <Input id="demo-email" label="Email" type="email" required error="Ingresá un email válido." value="federico@" />
+        <Input
+          id="demo-wa"
+          label="WhatsApp"
+          type="tel"
+          inputmode="tel"
+          required
+          hint="Con código de área, por ejemplo 264 555-1234."
+        />
+        <Select
+          id="demo-prov"
+          label="Provincia"
+          required
+          groups={[
+            { label: 'Cuyo y NOA', options: toProv(PROVINCIAS_FOCO) },
+            { label: 'Resto del país', options: toProv(PROVINCIAS_RESTO) },
+          ]}
+          options={[]}
+        />
+        <Input id="demo-loc" label="Localidad" />
+        <div class="sm:col-span-2">
+          <Input id="demo-msg" label="Mensaje" multiline />
+        </div>
+        <fieldset class="flex flex-col gap-2 sm:col-span-2">
+          <legend class="mb-2 text-sm font-medium">¿Qué querés lograr?</legend>
+          <Checkbox id="demo-o1" name="objetivos" value="reducir_costo_fijo" checked>
+            Reducir costos fijos
+          </Checkbox>
+          <Checkbox
+            id="demo-o2"
+            name="objetivos"
+            value="evaluar_solar"
+            description="Te decimos si conviene y cuál es el repago real."
+          >
+            Evaluar si conviene instalar paneles
+          </Checkbox>
+        </fieldset>
+      </form>
+    </section>
+
+    <section aria-labelledby="avisos" class="flex max-w-3xl flex-col gap-3">
+      <h2 id="avisos" class="text-h2">
+        Avisos
+      </h2>
+      <Alert title="Garantía de confidencialidad comercial">Tu documentación se usa solo para el diagnóstico.</Alert>
+      <Alert tone="warning">Estimación orientativa: no reemplaza el diagnóstico.</Alert>
+      <Alert tone="success">¡Recibimos tu documentación!</Alert>
+      <Alert tone="danger">El archivo supera los 15 MB.</Alert>
+    </section>
+
+    <section aria-labelledby="iconos" class="flex flex-col gap-4">
+      <h2 id="iconos" class="text-h2">
+        Íconos
+      </h2>
+      <ul class="flex flex-wrap gap-4 text-primary-700">
+        {(
+          ['bolt', 'sun', 'shield', 'chart', 'file', 'phone', 'mail', 'pin', 'menu', 'close', 'arrow', 'check'] as const
+        ).map((n) => (
+          <li class="flex flex-col items-center gap-1 text-xs text-ink-muted">
+            <Icon name={n} class="size-6 text-primary-700" />
+            {n}
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,29 @@
+---
+/** Wraps a form control with label, hint and error, wired via aria-describedby. */
+interface Props {
+  id: string;
+  label: string;
+  hint?: string | undefined;
+  error?: string | undefined;
+  optional?: boolean;
+}
+const { id, label, hint, error, optional = false } = Astro.props;
+---
+
+<div class="flex flex-col gap-1.5">
+  <label for={id} class="text-sm font-medium text-ink">
+    {label}
+    {optional && <span class="font-normal text-ink-muted"> (opcional)</span>}
+  </label>
+  <slot />
+  {hint && (
+    <p id={`${id}-hint`} class="text-sm text-ink-muted">
+      {hint}
+    </p>
+  )}
+  {error && (
+    <p id={`${id}-error`} class="text-sm font-medium text-danger">
+      {error}
+    </p>
+  )}
+</div>

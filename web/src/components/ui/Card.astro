@@ -1,0 +1,26 @@
+---
+interface Props {
+  as?: 'div' | 'article' | 'li' | 'section';
+  href?: string;
+  tone?: 'white' | 'surface';
+  class?: string | undefined;
+}
+const { as: Tag = 'div', href, tone = 'white', class: extra } = Astro.props;
+---
+
+<Tag
+  class:list={[
+    'group relative flex flex-col rounded-card border border-line p-5 shadow-card sm:p-6',
+    tone === 'white' ? 'bg-white' : 'bg-surface',
+    href && 'transition-colors hover:border-primary-300',
+    extra,
+  ]}
+>
+  {Astro.slots.has('media') && (
+    <div class="-mx-5 -mt-5 mb-5 overflow-hidden rounded-t-card sm:-mx-6 sm:-mt-6">
+      <slot name="media" />
+    </div>
+  )}
+  <slot />
+  {href && <a href={href} class="absolute inset-0 rounded-card" aria-hidden="true" tabindex="-1" />}
+</Tag>

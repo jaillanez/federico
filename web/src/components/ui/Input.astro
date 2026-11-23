@@ -1,0 +1,34 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Field from './Field.astro';
+import { controlClass, describedBy } from './control';
+
+type Props = Omit<HTMLAttributes<'input'>, 'id'> & {
+  id: string;
+  label: string;
+  hint?: string | undefined;
+  error?: string | undefined;
+  multiline?: boolean;
+};
+const { id, label, hint, error, multiline = false, required, ...rest } = Astro.props;
+const aria = {
+  'aria-describedby': describedBy(id, hint, error),
+  'aria-invalid': error ? ('true' as const) : undefined,
+};
+---
+
+<Field id={id} label={label} hint={hint} error={error} optional={!required}>
+  {multiline ? (
+    <textarea
+      id={id}
+      name={id}
+      rows={4}
+      required={required}
+      class={controlClass}
+      {...aria}
+      {...(rest as HTMLAttributes<'textarea'>)}
+    />
+  ) : (
+    <input id={id} name={id} required={required} class={controlClass} {...aria} {...rest} />
+  )}
+</Field>

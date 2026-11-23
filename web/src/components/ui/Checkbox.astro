@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = Omit<HTMLAttributes<'input'>, 'type'> & { id: string; description?: string };
+const { id, description, ...rest } = Astro.props;
+---
+
+<label
+  for={id}
+  class="flex cursor-pointer items-start gap-3 rounded-md border border-line bg-white p-3.5 transition-colors hover:border-primary-300 has-checked:border-primary-600 has-checked:bg-primary-50"
+>
+  <input id={id} type="checkbox" class="mt-0.5 size-5 shrink-0 accent-primary-600" {...rest} />
+  <span class="flex flex-col">
+    <span class="text-[0.9375rem] font-medium text-ink">
+      <slot />
+    </span>
+    {description && <span class="text-sm text-ink-muted">{description}</span>}
+  </span>
+</label>
