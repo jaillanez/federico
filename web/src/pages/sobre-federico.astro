@@ -1,0 +1,92 @@
+---
+import { getPage, siteUrl } from '@/lib/content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import CardGrid from '@/components/CardGrid.astro';
+import Pending from '@/components/Pending.astro';
+import { person } from '@/lib/jsonld';
+import { SECTORES } from '@/lib/sectores';
+import { getSiteData } from '@/lib/api';
+
+const page = await getPage('sobre-federico');
+const { site } = await getSiteData();
+---
+
+<BaseLayout
+  title={page.seoTitle}
+  description={page.seoDescription}
+  image="/og/sobre-federico.png"
+  jsonLd={[person(siteUrl(Astro.site))]}
+>
+  <PageHero eyebrow={page.eyebrow} title={page.h1} lead={page.bajada} />
+
+  <Section id="federico">
+    <div class="grid items-start gap-10 md:grid-cols-[minmax(0,20rem)_1fr]">
+      <!-- TODO(federico): profile photo. Until then, a neutral placeholder. -->
+      <div
+        class="bg-blueprint grid aspect-[4/5] place-items-center rounded-card text-primary-200"
+        role="img"
+        aria-label="Foto del Ing. Federico Delgado (próximamente)"
+      >
+        <span class="font-display text-6xl font-extrabold text-white/80">FD</span>
+      </div>
+      <div class="max-w-2xl">
+        <h2 class="text-h2">Ing. Federico Delgado</h2>
+        <p class="mt-1 text-ink-muted">Ingeniero eléctrico · Consultor independiente · {site.address}</p>
+        <div class="mt-6 flex flex-col gap-4 text-[1.0625rem]">
+          <p>
+            Federico combina la ingeniería de obra con el análisis tarifario y la consultoría solar. Diseña y ejecuta
+            instalaciones eléctricas de media y baja tensión, y asesora a empresas sobre cómo contratar y usar la
+            energía.
+          </p>
+          <p>
+            La regla es simple: S.E.I. no vende equipos. Así, cada recomendación responde a lo que le conviene al
+            cliente y no a lo que hay que colocar en stock.
+          </p>
+        </div>
+        <div class="mt-6">
+          <Pending what="foto de perfil y biografía revisada por Federico." />
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  {page.trayectoria.length > 0 ? (
+    <Section id="trayectoria" tone="surface" title="Trayectoria" eyebrow="Experiencia">
+      <ol class="relative ml-2 border-l-2 border-primary-200">
+        {page.trayectoria.map((t) => (
+          <li class="reveal relative pb-8 pl-8 last:pb-0">
+            <span
+              class="absolute top-1 -left-[0.5625rem] size-4 rounded-full border-2 border-primary-600 bg-white"
+              aria-hidden="true"
+            />
+            <p class="eyebrow">{t.periodo}</p>
+            <h3 class="mt-1 text-h3">{t.titulo}</h3>
+            <p class="mt-1 text-ink-muted">{t.texto}</p>
+          </li>
+        ))}
+      </ol>
+    </Section>
+  ) : (
+    <div class="container-sei pb-6">
+      <Pending what="trayectoria real (línea de tiempo) en src/content/paginas/sobre-federico.md." />
+    </div>
+  )}
+
+  <Section id="valores" tone="surface" title="Cómo trabajamos" eyebrow="Valores">
+    <CardGrid items={page.valores} cols={4} />
+  </Section>
+
+  <Section id="sectores" title="Sectores" eyebrow="Industrias">
+    <ul class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+      {SECTORES.map((s) => (
+        <li class="border-t-2 border-primary-600 pt-4">
+          <h3 class="text-lg">{s.nombre}</h3>
+          <p class="mt-1 text-sm text-ink-muted">{s.texto}</p>
+        </li>
+      ))}
+    </ul>
+    <!-- Phase 3: short contact form (origen=contacto) goes here. -->
+  </Section>
+</BaseLayout>

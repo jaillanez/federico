@@ -1,0 +1,49 @@
+---
+// Phase 2 placeholder so every link works. Phase 3 replaces it with the 3-step form.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import Button from '@/components/ui/Button.astro';
+import WhatsAppIcon from '@/components/WhatsAppIcon.astro';
+import { getSiteData } from '@/lib/api';
+import { INVOICE_WHATSAPP_TEXT, whatsappUrl } from '@/lib/site';
+
+const { site } = await getSiteData();
+---
+
+<BaseLayout
+  title="Diagnóstico Exprés"
+  description="Auditá tu factura eléctrica o evaluá tu presupuesto solar. Recibí un primer diagnóstico técnico e imparcial en menos de 48 horas."
+  image="/og/diagnostico.png"
+  cta={false}
+>
+  <PageHero
+    eyebrow="Diagnóstico Exprés"
+    title="Auditá tu factura eléctrica o evaluá tu presupuesto solar"
+    lead="Recibí un primer diagnóstico técnico e imparcial en menos de 48 horas."
+  />
+  <Section id="enviar">
+    <div class="max-w-2xl">
+      <h2 class="text-h3">Enviá tu factura por WhatsApp</h2>
+      <p class="mt-3 text-ink-muted">
+        Mientras terminamos el formulario en línea, mandanos la última factura completa por WhatsApp o por email a
+        <a class="font-medium text-primary-700 underline underline-offset-4" href={`mailto:${site.email}`}>
+          {site.email}
+        </a>
+        .
+      </p>
+      <div class="mt-6">
+        <Button
+          href={whatsappUrl(site.whatsapp, INVOICE_WHATSAPP_TEXT)}
+          variant="whatsapp"
+          size="lg"
+          target="_blank"
+          rel="noopener"
+          data-event="whatsapp_click"
+        >
+          <WhatsAppIcon /> Enviar mi factura por WhatsApp
+        </Button>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>

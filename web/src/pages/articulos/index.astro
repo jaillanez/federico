@@ -1,0 +1,76 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import { getArticles } from '@/lib/api';
+
+const articles = await getArticles();
+const tags = [...new Set(articles.flatMap((a) => a.tags))].sort((a, b) => a.localeCompare(b, 'es'));
+---
+
+<BaseLayout
+  title="Artículos técnicos"
+  description="Artículos del Ing. Federico Delgado sobre tarifas eléctricas, energía reactiva, potencia contratada y proyectos solares para empresas."
+  image="/og/articulos.png"
+>
+  <PageHero
+    eyebrow="Artículos"
+    title="Ingeniería y energía, sin letra chica"
+    lead="Notas técnicas para tomar mejores decisiones sobre tu factura eléctrica y tus inversiones en energía."
+  />
+  <Section id="listado">
+    {tags.length > 1 && (
+      <nav aria-label="Filtrar por etiqueta" class="mb-8">
+        <ul class="flex flex-wrap gap-2" id="tags">
+          <li>
+            <button type="button" data-tag="" aria-pressed="true" class="tag-btn">
+              Todos
+            </button>
+          </li>
+          {tags.map((t) => (
+            <li>
+              <button type="button" data-tag={t} aria-pressed="false" class="tag-btn">
+                {t}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+    {articles.length === 0 ? (
+      <p class="text-ink-muted">Pronto vas a encontrar acá nuestros primeros artículos.</p>
+    ) : (
+      <ul class="grid gap-5 md:grid-cols-2 lg:grid-cols-3" id="lista-articulos">
+        {articles.map((a) => (
+          <li data-tags={a.tags.join('|')}>
+            <ArticleCard article={a} headingLevel="h2" />
+          </li>
+        ))}
+      </ul>
+    )}
+  </Section>
+</BaseLayout>
+
+<style>
+  @reference '../../styles/global.css';
+  .tag-btn {
+    @apply min-h-9 rounded-full border border-line bg-white px-3.5 text-sm font-medium text-ink-muted hover:border-primary-300 aria-pressed:border-primary-600 aria-pressed:bg-primary-600 aria-pressed:text-white;
+  }
+</style>
+
+<script>
+  // Progressive enhancement: without JS every article is listed.
+  function init() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>('#tags [data-tag]');
+    const items = document.querySelectorAll<HTMLElement>('#lista-articulos > li');
+    buttons.forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.tag ?? '';
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        items.forEach((li) => (li.hidden = !!tag && !(li.dataset.tags ?? '').split('|').includes(tag)));
+      }),
+    );
+  }
+  document.addEventListener('astro:page-load', init);
+</script>

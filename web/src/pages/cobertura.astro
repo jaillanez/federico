@@ -1,0 +1,27 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import MapaCobertura from '@/components/MapaCobertura.astro';
+import { getProjects } from '@/lib/api';
+import { countByProvince } from '@/lib/catalog';
+
+const projects = await getProjects();
+const counts = countByProvince(projects);
+---
+
+<BaseLayout
+  title="Cobertura nacional"
+  description="Obras eléctricas y consultoría energética en San Juan, Mendoza, La Rioja, Catamarca y todo el país. Mirá las obras de S.E.I. por provincia."
+  image="/og/cobertura.png"
+>
+  <PageHero
+    eyebrow="Cobertura nacional"
+    title="De Cuyo y el NOA a todo el país"
+    lead="Base en San Juan y foco en Mendoza, La Rioja y Catamarca. El asesoramiento tarifario y solar se hace a distancia en cualquier provincia."
+  />
+  <Section id="mapa">
+    <MapaCobertura counts={counts} />
+    <p class="mt-8 text-xs text-ink-muted">Límites provinciales: Instituto Geográfico Nacional (IGN), simplificados.</p>
+  </Section>
+</BaseLayout>

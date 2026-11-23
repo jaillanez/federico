@@ -1,0 +1,71 @@
+---
+import { getPage } from '@/lib/content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import CardGrid from '@/components/CardGrid.astro';
+import Faq from '@/components/Faq.astro';
+import CalcDisclaimer from '@/components/CalcDisclaimer.astro';
+import Button from '@/components/ui/Button.astro';
+import CalculadoraCosPhi from '@/islands/CalculadoraCosPhi';
+import { faqPage } from '@/lib/jsonld';
+import { getSiteData } from '@/lib/api';
+import { defaultSite } from '@/lib/site';
+
+const page = await getPage('asesoramiento-tarifario');
+const { tgPhiLimit } = await getSiteData();
+---
+
+<BaseLayout
+  title={page.seoTitle}
+  description={page.seoDescription}
+  image="/og/asesoramiento-tarifario.png"
+  jsonLd={[faqPage(page.faq)]}
+  ctaTitle="Auditá tu factura eléctrica"
+  ctaText="Adjuntá tu última factura completa. Te decimos dónde se escapa la plata y cuánto podés ahorrar sin obras."
+>
+  <PageHero eyebrow={page.eyebrow} title={page.h1} lead={page.bajada}>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <Button href="/diagnostico" variant="accent" size="lg">
+        Auditar mi factura
+      </Button>
+      <Button href="#calculadora" variant="inverse" size="lg">
+        Calcular mi cos φ
+      </Button>
+    </div>
+  </PageHero>
+
+  <Section id="fugas" title={page.tarjetasTitulo} eyebrow="Costos fijos">
+    <CardGrid items={page.tarjetas} cols={4} />
+  </Section>
+
+  <Section id="servicios" tone="surface" title={page.serviciosTitulo} eyebrow="Servicios">
+    <CardGrid items={page.servicios} cols={2} />
+  </Section>
+
+  <Section
+    id="calculadora"
+    title="Calculadora de factor de potencia"
+    eyebrow="Herramienta"
+    lead="Con la energía activa y la reactiva de tu factura, calculá tu tg φ y tu cos φ y fijate si probablemente te estén cobrando recargo."
+  >
+    <CalculadoraCosPhi client:visible limite={tgPhiLimit} />
+    <CalcDisclaimer />
+  </Section>
+
+  <Section id="cobertura" tone="surface" title="Cobertura" eyebrow="Dónde trabajamos">
+    <p class="max-w-2xl text-lead text-ink-muted">
+      Asesoramos a empresas de {defaultSite.coverage.slice(0, -1).join(', ')} y de todo el país. El análisis tarifario
+      se hace a distancia; cuando hace falta, visitamos la planta.
+    </p>
+    <div class="mt-6">
+      <Button href="/cobertura" variant="outline">
+        Ver el mapa de cobertura
+      </Button>
+    </div>
+  </Section>
+
+  <Section id="preguntas" title="Preguntas frecuentes" eyebrow="FAQ">
+    <Faq items={page.faq} />
+  </Section>
+</BaseLayout>

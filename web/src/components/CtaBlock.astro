@@ -2,6 +2,8 @@
 import Button from './ui/Button.astro';
 import WhatsAppIcon from './WhatsAppIcon.astro';
 import { whatsappUrl } from '@/lib/site';
+import { getSiteData } from '@/lib/api';
+const { site } = await getSiteData();
 
 interface Props {
   title?: string | undefined;
@@ -27,7 +29,7 @@ const {
         Solicitar diagnóstico
       </Button>
       <Button
-        href={whatsappUrl()}
+        href={whatsappUrl(site.whatsapp)}
         variant="inverse"
         size="lg"
         target="_blank"

@@ -1,0 +1,31 @@
+---
+interface Props {
+  id?: string;
+  title?: string | undefined;
+  eyebrow?: string | undefined;
+  lead?: string | undefined;
+  tone?: 'white' | 'surface';
+  class?: string;
+}
+const { id, title, eyebrow, lead, tone = 'white', class: cls } = Astro.props;
+const headingId = id ? `${id}-titulo` : undefined;
+---
+
+<section
+  id={id}
+  aria-labelledby={title ? headingId : undefined}
+  class:list={[tone === 'surface' ? 'bg-surface' : 'bg-white', cls]}
+>
+  <div class="container-sei py-14 sm:py-20">
+    {title && (
+      <header class="reveal mb-8 max-w-3xl sm:mb-10">
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        <h2 id={headingId} class="mt-2 text-h2">
+          {title}
+        </h2>
+        {lead && <p class="mt-3 text-lead text-ink-muted">{lead}</p>}
+      </header>
+    )}
+    <slot />
+  </div>
+</section>

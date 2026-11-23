@@ -1,13 +1,14 @@
 ---
 // TODO(federico): replace this provisional wordmark with the official logo (SVG).
-import { site } from '@/lib/site';
+import { defaultSite as site } from '@/lib/site';
 interface Props {
   inverse?: boolean;
 }
 const { inverse = false } = Astro.props;
 ---
 
-<a href="/" class="flex items-center gap-2.5" aria-label={`${site.legalName}, inicio`}>
+<!-- The accessible name keeps the visible text ("S.E.I. Ing. Federico Delgado") plus a hidden hint. -->
+<a href="/" class="flex items-center gap-2.5">
   <span
     class:list={[
       'grid size-9 place-items-center rounded-md',
@@ -25,7 +26,7 @@ const { inverse = false } = Astro.props;
     <span
       class:list={['text-[0.6875rem] font-medium whitespace-nowrap', inverse ? 'text-primary-100' : 'text-ink-muted']}
     >
-      Ing. Federico Delgado
+      Ing. Federico Delgado<span class="sr-only">, ir al inicio</span>
     </span>
   </span>
 </a>

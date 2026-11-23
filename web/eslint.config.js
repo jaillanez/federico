@@ -9,4 +9,6 @@ export default [
   ...tseslint.configs.strict,
   ...astro.configs.recommended,
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+  // In tests a failed assertion is the error we want, so `!` is fine there.
+  { files: ['**/*.test.ts'], rules: { '@typescript-eslint/no-non-null-assertion': 'off' } },
 ];
