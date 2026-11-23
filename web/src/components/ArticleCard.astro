@@ -1,0 +1,31 @@
+---
+import type { ArticleSummary } from '@/lib/api';
+import { formatDate } from '@/lib/format';
+import Badge from './ui/Badge.astro';
+interface Props {
+  article: ArticleSummary;
+  headingLevel?: 'h2' | 'h3';
+}
+const { article: a, headingLevel: H = 'h3' } = Astro.props;
+---
+
+<article class="reveal group relative flex flex-col gap-3 rounded-card border border-line bg-white p-5 shadow-card transition-colors hover:border-primary-300 sm:p-6">
+  <p class="text-sm text-ink-muted">
+    <time datetime={a.publicado_at}>{formatDate(a.publicado_at)}</time>
+  </p>
+  <H class="text-h3 group-hover:text-primary-700">
+    <a href={`/articulos/${a.slug}`} class="after:absolute after:inset-0">
+      {a.titulo}
+    </a>
+  </H>
+  {a.extracto && <p class="line-clamp-3 text-ink-muted">{a.extracto}</p>}
+  {a.tags.length > 0 && (
+    <ul class="relative mt-auto flex flex-wrap gap-2 pt-2">
+      {a.tags.map((t) => (
+        <li>
+          <Badge>{t}</Badge>
+        </li>
+      ))}
+    </ul>
+  )}
+</article>

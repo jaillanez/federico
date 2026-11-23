@@ -1,0 +1,56 @@
+---
+/**
+ * Animated counters from site_settings.metricas. Metrics without a confirmed value are not
+ * published (no invented numbers). Respects prefers-reduced-motion.
+ */
+import type { Metric } from '@/lib/api';
+import { formatNumber } from '@/lib/format';
+interface Props {
+  metrics: Metric[];
+}
+const ready = Astro.props.metrics.filter((m): m is Metric & { valor: number } => typeof m.valor === 'number');
+---
+
+{ready.length > 0 && (
+  <dl class="grid grid-cols-2 gap-6 md:grid-cols-4">
+    {ready.map((m) => (
+      <div class="border-l-2 border-accent pl-4">
+        <dd class="font-display text-display font-extrabold tracking-tight text-white tabular-nums">
+          <span data-counter={m.valor}>{formatNumber(m.valor)}</span>
+          {m.sufijo}
+        </dd>
+        <dt class="mt-1 text-sm text-primary-100">{m.etiqueta}</dt>
+      </div>
+    ))}
+  </dl>
+)}
+
+<script>
+  function animate(el: HTMLElement) {
+    const target = Number(el.dataset.counter);
+    if (!Number.isFinite(target)) return;
+    const fmt = new Intl.NumberFormat('es-AR');
+    const start = performance.now();
+    const dur = 1200;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      el.textContent = fmt.format(Math.round(target * (1 - (1 - t) ** 3)));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  function init() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const els = document.querySelectorAll<HTMLElement>('[data-counter]');
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          animate(e.target as HTMLElement);
+          io.unobserve(e.target);
+        }
+      }
+    });
+    els.forEach((el) => io.observe(el));
+  }
+  document.addEventListener('astro:page-load', init);
+</script>

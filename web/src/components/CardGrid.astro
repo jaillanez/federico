@@ -1,0 +1,27 @@
+---
+import Icon from './Icon.astro';
+import Card from './ui/Card.astro';
+
+type IconName = Parameters<typeof Icon>[0]['name'];
+interface Props {
+  items: { titulo: string; texto: string; icono?: string | undefined }[];
+  cols?: 2 | 3 | 4;
+  tone?: 'white' | 'surface';
+}
+const { items, cols = 3, tone = 'white' } = Astro.props;
+const colClass = { 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-2 xl:grid-cols-4' }[cols];
+---
+
+<ul class:list={['grid gap-4 sm:gap-5', colClass]}>
+  {items.map((item) => (
+    <Card as="li" tone={tone} class="reveal">
+      {item.icono && (
+        <span class="grid size-11 place-items-center rounded-md bg-primary-50 text-primary-700">
+          <Icon name={item.icono as IconName} class="size-6" />
+        </span>
+      )}
+      <h3 class:list={['text-h3', item.icono && 'mt-4']}>{item.titulo}</h3>
+      <p class="mt-2 text-ink-muted">{item.texto}</p>
+    </Card>
+  ))}
+</ul>

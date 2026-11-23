@@ -1,0 +1,33 @@
+---
+import type { ProjectSummary } from '@/lib/api';
+import { Picture } from '@/islands/Picture';
+import Badge from './ui/Badge.astro';
+interface Props {
+  project: ProjectSummary;
+  headingLevel?: 'h2' | 'h3';
+}
+const { project: p, headingLevel: H = 'h3' } = Astro.props;
+const place = [p.localidad, p.provincia].filter(Boolean).join(', ');
+---
+
+<article class="reveal group relative flex flex-col overflow-hidden rounded-card border border-line bg-white shadow-card transition-colors hover:border-primary-300">
+  <div class="aspect-[4/3] overflow-hidden">
+    <Picture
+      image={p.portada}
+      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      class="transition-transform duration-300 group-hover:scale-[1.03]"
+    />
+  </div>
+  <div class="flex flex-1 flex-col gap-2 p-5">
+    {p.categoria && <Badge tone="primary">{p.categoria.nombre}</Badge>}
+    <H class="text-h3 group-hover:text-primary-700">
+      <a href={`/obras/${p.slug}`} class="after:absolute after:inset-0">
+        {p.titulo}
+      </a>
+    </H>
+    <p class="text-sm text-ink-muted">
+      {place}
+      {p.potencia_kw ? ` · ${p.potencia_kw.toLocaleString('es-AR')} kW` : ''}
+    </p>
+  </div>
+</article>

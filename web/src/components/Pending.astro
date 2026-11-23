@@ -1,0 +1,16 @@
+---
+/**
+ * Marks content that depends on Federico. Visible ONLY in `astro dev` so it is never published;
+ * in production nothing is rendered.
+ */
+interface Props {
+  what: string;
+}
+const { what } = Astro.props;
+---
+
+{import.meta.env.DEV && (
+  <div class="rounded-card border-2 border-dashed border-accent bg-accent-soft p-4 text-sm text-ink">
+    <strong>TODO(federico):</strong> {what} <span class="text-ink-muted">(este aviso solo se ve en desarrollo)</span>
+  </div>
+)}

@@ -1,0 +1,65 @@
+---
+import { getPage } from '@/lib/content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import CardGrid from '@/components/CardGrid.astro';
+import Comparison from '@/components/Comparison.astro';
+import Steps from '@/components/Steps.astro';
+import Faq from '@/components/Faq.astro';
+import CalcDisclaimer from '@/components/CalcDisclaimer.astro';
+import Button from '@/components/ui/Button.astro';
+import SimuladorRepago from '@/islands/SimuladorRepago';
+import { faqPage } from '@/lib/jsonld';
+
+const page = await getPage('consultoria-solar');
+---
+
+<BaseLayout
+  title={page.seoTitle}
+  description={page.seoDescription}
+  image="/og/consultoria-solar.png"
+  jsonLd={[faqPage(page.faq)]}
+  ctaTitle="¿Te pasaron un presupuesto solar?"
+  ctaText="Mandanos el presupuesto y tus últimas facturas. Federico lo revisa personalmente y te dice si conviene, con números reales."
+>
+  <PageHero eyebrow={page.eyebrow} title={page.h1} lead={page.bajada}>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <Button href="/diagnostico" variant="accent" size="lg">
+        Auditar mi presupuesto solar
+      </Button>
+      <Button href="#simulador" variant="inverse" size="lg">
+        Probar el simulador
+      </Button>
+    </div>
+  </PageHero>
+
+  {page.comparativa && (
+    <Section id="comparativa" title={page.comparativa.titulo} eyebrow="Cartas sobre la mesa">
+      <Comparison izquierda={page.comparativa.izquierda} derecha={page.comparativa.derecha} />
+    </Section>
+  )}
+
+  <Section id="pilares" tone="surface" title={page.pilaresTitulo} eyebrow="Alcance">
+    <CardGrid items={page.pilares} cols={4} />
+  </Section>
+
+  <Section id="metodologia" title={page.pasosTitulo} eyebrow="Metodología">
+    <Steps items={page.pasos} />
+  </Section>
+
+  <Section
+    id="simulador"
+    tone="surface"
+    title="Simulador de repago"
+    eyebrow="Herramienta"
+    lead="Probá cuántos años tarda en recuperarse la inversión con mantenimiento y degradación de los paneles incluidos."
+  >
+    <SimuladorRepago client:visible />
+    <CalcDisclaimer />
+  </Section>
+
+  <Section id="preguntas" title="Preguntas frecuentes" eyebrow="FAQ">
+    <Faq items={page.faq} />
+  </Section>
+</BaseLayout>

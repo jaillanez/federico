@@ -7,7 +7,7 @@ from app.scripts.seed import seed
 from app.security import hash_password, verify_password
 
 
-async def test_seed_is_idempotent(session: AsyncSession) -> None:
+async def test_seed_is_idempotent(session: AsyncSession, clean_content: None) -> None:
     await seed()
     await seed()
     counts = {

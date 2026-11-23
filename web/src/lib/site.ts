@@ -1,7 +1,7 @@
 /**
- * Single source of truth for contact data and global site info.
- * Mirrors the `site_settings` table; in phase 2 the build reads it from
- * GET /api/settings/public and falls back to these defaults.
+ * Defaults for contact data and global site info. The build overrides them with the values of
+ * `site_settings` (GET /api/settings/public, see lib/api.ts → getSiteData). Templates must read
+ * contact data from there, never hard-code it.
  */
 export interface SiteConfig {
   name: string;
@@ -16,7 +16,7 @@ export interface SiteConfig {
   coverage: string[];
 }
 
-export const site: SiteConfig = {
+export const defaultSite: SiteConfig = {
   name: 'S.E.I.',
   legalName: 'S.E.I. Servicio Eléctrico Integral',
   owner: 'Ing. Federico Delgado',
@@ -28,6 +28,8 @@ export const site: SiteConfig = {
   whatsapp: '5492645651609',
   coverage: ['San Juan', 'Mendoza', 'La Rioja', 'Catamarca', 'Todo el país'],
 };
+
+export const FOCUS_PROVINCES = ['San Juan', 'Mendoza', 'La Rioja', 'Catamarca'] as const;
 
 export const nav = [
   { href: '/consultoria-solar', label: 'Consultoría solar' },
@@ -44,12 +46,14 @@ export const legalLinks = [
 ] as const;
 
 export const DEFAULT_WHATSAPP_TEXT = 'Hola Federico, te escribo desde la web...';
+export const INVOICE_WHATSAPP_TEXT =
+  'Hola Federico, te adjunto la factura de mi empresa para un diagnóstico tarifario/solar';
 
-export function whatsappUrl(text: string = DEFAULT_WHATSAPP_TEXT): string {
-  return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(text)}`;
+export function whatsappUrl(number: string, text: string = DEFAULT_WHATSAPP_TEXT): string {
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
-/** "0264-4220106" → "tel:+542644220106" (Argentine landline / mobile). */
+/** "0264-4220106" → "tel:+542644220106"; "0264 15 5651609" → "tel:+5492645651609". */
 export function telHref(local: string): string {
   const digits = local
     .replace(/\D/g, '')

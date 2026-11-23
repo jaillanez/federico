@@ -1,0 +1,42 @@
+---
+// TODO(federico): legal text must be reviewed by Federico / a lawyer before launch (phase 3).
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import Pending from '@/components/Pending.astro';
+import { getSiteData } from '@/lib/api';
+const { site } = await getSiteData();
+---
+
+<BaseLayout
+  title="Política de privacidad"
+  description="Cómo S.E.I. trata los datos personales que recibe a través de este sitio, según la Ley 25.326 de Protección de Datos Personales."
+  image="/og/inicio.png"
+  cta={false}
+>
+  <PageHero eyebrow="Legales" title="Política de privacidad" />
+  <Section>
+    <div class="prose-sei max-w-3xl">
+      <Pending what="texto legal definitivo, revisado por Federico." />
+      <p>
+        {site.legalName} ({site.owner}, {site.address}) es responsable de los datos personales que nos enviás por este
+        sitio. Los usamos solo para responder tu consulta y preparar el diagnóstico que pediste.
+      </p>
+      <h2>Qué datos recibimos</h2>
+      <p>
+        Los que cargás en los formularios (nombre, empresa, cargo, email, teléfono, provincia y localidad) y los
+        archivos que adjuntás.
+      </p>
+      <h2>Cuánto tiempo los guardamos</h2>
+      <p>Las consultas que no avanzan se eliminan, con sus archivos, a los 24 meses.</p>
+      <h2>Tus derechos</h2>
+      <p>
+        Podés pedir acceso, rectificación o eliminación de tus datos escribiendo a{' '}
+        <a href={`mailto:${site.email}`}>{site.email}</a>, en los términos de la Ley 25.326. La Agencia de Acceso a la
+        Información Pública es el órgano de control.
+      </p>
+      <h2>Analítica</h2>
+      <p>El sitio usa una analítica sin cookies que no identifica a las personas.</p>
+    </div>
+  </Section>
+</BaseLayout>

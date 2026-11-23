@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import Button from '@/components/ui/Button.astro';
+import { nav } from '@/lib/site';
+---
+
+<BaseLayout
+  title="Página no encontrada"
+  description="La página que buscás no existe o cambió de dirección. Conocé nuestros servicios o pedí un diagnóstico de tu factura eléctrica."
+  noindex
+>
+  <PageHero
+    eyebrow="Error 404"
+    title="No encontramos esta página"
+    lead="Puede que la dirección haya cambiado. Estos enlaces te pueden servir:"
+  />
+  <Section>
+    <div class="flex flex-col gap-8">
+      <Button href="/diagnostico" variant="accent" size="lg" class="self-start">
+        Auditar mi factura
+      </Button>
+      <ul class="grid max-w-2xl gap-x-8 sm:grid-cols-2">
+        {[{ href: '/', label: 'Inicio' }, ...nav].map((l) => (
+          <li class="border-b border-line">
+            <a href={l.href} class="flex min-h-12 items-center font-medium hover:text-primary-700">
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </Section>
+</BaseLayout>

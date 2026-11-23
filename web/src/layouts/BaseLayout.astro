@@ -2,21 +2,25 @@
 import '@/styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Fonts from '@/components/Fonts.astro';
-import Seo from '@/components/Seo.astro';
+import Seo, { type SeoProps } from '@/components/Seo.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import WhatsAppFloat from '@/components/WhatsAppFloat.astro';
 import CtaBlock from '@/components/CtaBlock.astro';
+import { professionalService } from '@/lib/jsonld';
+import { getSiteData } from '@/lib/api';
 
-interface Props {
-  title: string;
-  description: string;
-  noindex?: boolean;
-  image?: string;
+type Props = SeoProps & {
   /** Every public page ends with the CTA block; set false only where it would repeat. */
   cta?: boolean;
-}
-const { cta = true, ...seo } = Astro.props;
+  ctaTitle?: string;
+  ctaText?: string;
+};
+const { cta = true, ctaTitle, ctaText, jsonLd = [], ...seo } = Astro.props;
+const { site } = await getSiteData();
+const site_url = Astro.site ?? new URL(Astro.url.origin);
+// The organization is described on every page; pages add their own entities.
+const ld = [professionalService(site, site_url), ...jsonLd];
 ---
 
 <!doctype html>
@@ -25,9 +29,9 @@ const { cta = true, ...seo } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0b3d91" />
-    <Fonts />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <Seo {...seo} />
+    <Fonts />
+    <Seo {...seo} jsonLd={ld} />
     <ClientRouter />
   </head>
   <body class="flex flex-col">
@@ -35,8 +39,16 @@ const { cta = true, ...seo } = Astro.props;
     <main id="contenido" class="flex-1">
       <slot />
     </main>
-    {cta && <CtaBlock />}
+    {cta && <CtaBlock title={ctaTitle} text={ctaText} />}
     <Footer />
     <WhatsAppFloat />
+    <script>
+      import { track, type AnalyticsEvent } from '@/lib/analytics';
+      // Links/buttons with data-event="whatsapp_click" etc. report a cookie-less event.
+      document.addEventListener('click', (e) => {
+        const el = (e.target as Element | null)?.closest<HTMLElement>('[data-event]');
+        if (el?.dataset.event) track(el.dataset.event as AnalyticsEvent);
+      });
+    </script>
   </body>
 </html>

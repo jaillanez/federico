@@ -1,0 +1,32 @@
+---
+// TODO(federico): legal text must be reviewed by Federico / a lawyer before launch (phase 3).
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import Pending from '@/components/Pending.astro';
+---
+
+<BaseLayout
+  title="Confidencialidad"
+  description="Garantía de confidencialidad comercial de S.E.I.: tu documentación se usa solo para el diagnóstico y no se comercializa ni se transfiere a terceros."
+  image="/og/inicio.png"
+  cta={false}
+>
+  <PageHero eyebrow="Legales" title="Garantía de confidencialidad comercial" />
+  <Section>
+    <div class="prose-sei max-w-3xl">
+      <Pending what="texto legal definitivo, revisado por Federico." />
+      <p>
+        Las facturas, presupuestos y demás documentos que nos envíes se usan exclusivamente para preparar tu
+        diagnóstico. No se comercializan ni se transfieren a terceros, a proveedores de equipos ni a distribuidoras de
+        energía.
+      </p>
+      <h2>Cómo protegemos tu documentación</h2>
+      <ul>
+        <li>Los archivos se guardan en un almacenamiento privado, sin acceso público.</li>
+        <li>Solo Federico puede descargarlos, con enlaces temporales.</li>
+        <li>La conexión con el sitio está cifrada (HTTPS).</li>
+      </ul>
+    </div>
+  </Section>
+</BaseLayout>

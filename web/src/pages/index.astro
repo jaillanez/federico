@@ -1,30 +1,163 @@
 ---
-// Phase 1 placeholder: the full home page (cards, counters, projects...) is phase 2.
+import { getPage } from '@/lib/content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import CardGrid from '@/components/CardGrid.astro';
+import Counters from '@/components/Counters.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import Pending from '@/components/Pending.astro';
 import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/Icon.astro';
+import { getArticles, getProjects, getSiteData, getTestimonials } from '@/lib/api';
+import { SECTORES } from '@/lib/sectores';
+
+const page = await getPage('inicio');
+const [{ metrics }, projects, articles, testimonials] = await Promise.all([
+  getSiteData(),
+  getProjects(),
+  getArticles(),
+  getTestimonials(),
+]);
+const featured = (projects.filter((p) => p.destacado).length ? projects.filter((p) => p.destacado) : projects).slice(
+  0,
+  3,
+);
+const latest = articles.slice(0, 3);
+const hasMetrics = metrics.some((m) => typeof m.valor === 'number');
 ---
 
-<BaseLayout
-  title="Ingeniería eléctrica y solar"
-  description="Optimizamos costos energéticos y auditamos proyectos solares para grandes empresas sin venderte equipos. San Juan, Mendoza, La Rioja, Catamarca y todo el país."
->
-  <section class="bg-blueprint text-white">
-    <div class="container-sei py-20 sm:py-28">
-      <p class="eyebrow text-accent">S.E.I. Servicio Eléctrico Integral</p>
-      <h1 class="mt-4 max-w-4xl text-display text-white">
-        Ingeniería eléctrica y consultoría solar 100% independiente para grandes empresas
-      </h1>
-      <p class="mt-6 max-w-2xl text-lead text-primary-100">
-        Optimizamos tus costos energéticos y auditamos proyectos solares sin venderte equipos.
-      </p>
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Button href="/diagnostico" variant="accent" size="lg">
-          Auditar mi factura
-        </Button>
-        <Button href="/consultoria-solar" variant="inverse" size="lg">
-          Consultoría solar imparcial
+<BaseLayout title={page.seoTitle} description={page.seoDescription} image="/og/inicio.png">
+  <PageHero eyebrow={page.eyebrow} title={page.h1} lead={page.bajada} size="lg">
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <Button href="/diagnostico" variant="accent" size="lg">
+        Auditar mi factura
+      </Button>
+      <Button href="/consultoria-solar" variant="inverse" size="lg">
+        Consultoría solar imparcial
+      </Button>
+    </div>
+    {hasMetrics && (
+      <div class="mt-14 border-t border-white/15 pt-10">
+        <Counters metrics={metrics} />
+      </div>
+    )}
+  </PageHero>
+  {!hasMetrics && (
+    <div class="container-sei pt-6">
+      <Pending what="cifras reales para los contadores del inicio (site_settings.metricas)." />
+    </div>
+  )}
+
+  <Section id="diferencial" title={page.tarjetasTitulo} eyebrow="Independencia profesional">
+    <CardGrid items={page.tarjetas} />
+  </Section>
+
+  <Section id="servicios" tone="surface" title="Tres frentes, un mismo criterio" eyebrow="Servicios">
+    <ul class="grid gap-4 md:grid-cols-3">
+      {[
+        {
+          href: '/asesoramiento-tarifario',
+          icon: 'chart',
+          t: 'Asesoramiento tarifario',
+          d: 'Bajá costos fijos sin obras: potencia, reactiva, bandas horarias y categoría.',
+        },
+        {
+          href: '/consultoria-solar',
+          icon: 'sun',
+          t: 'Consultoría solar imparcial',
+          d: 'Auditamos el presupuesto que te pasaron y calculamos el repago real.',
+        },
+        {
+          href: '/obras',
+          icon: 'bolt',
+          t: 'Obras eléctricas MT y BT',
+          d: 'Tableros, canalizaciones, fuerza motriz, subestaciones y acometidas.',
+        },
+      ].map((s) => (
+        <li class="reveal group relative rounded-card border border-line bg-white p-6 shadow-card transition-colors hover:border-primary-300">
+          <Icon name={s.icon as 'chart'} class="size-7 text-primary-600" />
+          <h3 class="mt-4 text-h3 group-hover:text-primary-700">
+            <a href={s.href} class="after:absolute after:inset-0">
+              {s.t}
+            </a>
+          </h3>
+          <p class="mt-2 text-ink-muted">{s.d}</p>
+          <p class="mt-4 flex items-center gap-1 text-sm font-semibold text-primary-700" aria-hidden="true">
+            Conocé más <Icon name="arrow" class="size-4 transition-transform group-hover:translate-x-1" />
+          </p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  {featured.length > 0 && (
+    <Section id="obras" title="Obras destacadas" eyebrow="Ingeniería en campo">
+      <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {featured.map((p) => (
+          <li>
+            <ProjectCard project={p} />
+          </li>
+        ))}
+      </ul>
+      <div class="mt-8">
+        <Button href="/obras" variant="outline">
+          Ver todas las obras
         </Button>
       </div>
+    </Section>
+  )}
+
+  <Section id="sectores" tone="surface" title="Sectores en los que trabajamos" eyebrow="Industrias">
+    <ul class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+      {SECTORES.map((s) => (
+        <li class="reveal border-t-2 border-primary-600 pt-4">
+          <h3 class="text-lg">{s.nombre}</h3>
+          <p class="mt-1 text-sm text-ink-muted">{s.texto}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  {testimonials.length > 0 ? (
+    <Section id="testimonios" title="Lo que dicen nuestros clientes" eyebrow="Testimonios">
+      <ul class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {testimonials.map((t) => (
+          <li class="reveal">
+            <figure class="flex h-full flex-col rounded-card border border-line bg-white p-6 shadow-card">
+              <blockquote class="flex-1 text-[1.0625rem]">“{t.texto}”</blockquote>
+              <figcaption class="mt-5 border-t border-line pt-4 text-sm">
+                <span class="font-semibold">{t.nombre}</span>
+                <span class="block text-ink-muted">
+                  {[t.cargo, t.empresa, t.provincia].filter(Boolean).join(' · ')}
+                </span>
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  ) : (
+    <div class="container-sei pb-6">
+      <Pending what="testimonios reales de clientes (se publican desde el panel)." />
     </div>
-  </section>
+  )}
+
+  {latest.length > 0 && (
+    <Section id="articulos" tone="surface" title="Últimos artículos" eyebrow="Para decidir con información">
+      <ul class="grid gap-5 md:grid-cols-3">
+        {latest.map((a) => (
+          <li>
+            <ArticleCard article={a} />
+          </li>
+        ))}
+      </ul>
+      <div class="mt-8">
+        <Button href="/articulos" variant="outline">
+          Ver todos los artículos
+        </Button>
+      </div>
+    </Section>
+  )}
 </BaseLayout>

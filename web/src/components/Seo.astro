@@ -1,35 +1,60 @@
 ---
-/** Basic SEO tags. Open Graph images per page and JSON-LD arrive in phase 2. */
-import { site } from '@/lib/site';
+import { defaultSite as site } from '@/lib/site';
 
-interface Props {
+export interface SeoProps {
   title: string;
   description: string;
-  noindex?: boolean;
+  /** Open Graph image path (1200×630). Defaults to the image generated for the page. */
   image?: string | undefined;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>[];
 }
-// TODO: phase 2 generates a 1200×630 Open Graph image per page when none is given.
-const { title, description, noindex = false, image } = Astro.props;
-const SUFFIX = ' | S.E.I. Ing. Federico Delgado';
-const fullTitle = title.includes('S.E.I.') ? title : `${title}${SUFFIX}`;
-const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site);
-const imageUrl = image ? new URL(image, Astro.site) : undefined;
+type Props = SeoProps;
+const { title, description, image = '/og/inicio.png', type = 'website', noindex = false, jsonLd = [] } = Astro.props;
+const MAX = 60;
+// Full suffix when it fits, short suffix otherwise, and cut at a word boundary as last resort.
+function buildTitle(t: string): string {
+  if (t.includes('S.E.I.')) return t;
+  for (const suffix of [' | S.E.I. Ing. Federico Delgado', ' | S.E.I.']) {
+    if (t.length + suffix.length <= MAX) return `${t}${suffix}`;
+  }
+  const room = MAX - ' | S.E.I.'.length - 1;
+  return `${t.slice(0, t.lastIndexOf(' ', room)).replace(/[\s,.:;–-]+$/, '')}… | S.E.I.`;
+}
+const fullTitle = buildTitle(title);
+// Clean URLs: no trailing slash, no .html, and "/index" is the home page.
+const cleanPath =
+  Astro.url.pathname
+    .replace(/\.html$/, '')
+    .replace(/(^|\/)index$/, '$1')
+    .replace(/(.)\/$/, '$1') || '/';
+const canonical = new URL(cleanPath, Astro.site);
+const imageUrl = new URL(image, Astro.site);
 
-if (import.meta.env.DEV) {
-  if (fullTitle.length > 60) console.warn(`[seo] title > 60 caracteres (${fullTitle.length}): ${fullTitle}`);
-  if (description.length > 155) console.warn(`[seo] description > 155 caracteres: ${Astro.url.pathname}`);
-}
+if (fullTitle.length > 60) console.warn(`[seo] title > 60 caracteres (${fullTitle.length}): ${fullTitle}`);
+if (description.length > 155) console.warn(`[seo] description > 155 caracteres en ${Astro.url.pathname}`);
+// Escape "<" so JSON-LD can never close the <script> tag.
+const ld = (o: unknown) => JSON.stringify(o).replace(/</g, '\\u003c');
 ---
 
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={canonical} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
-<meta property="og:type" content="website" />
+<meta property="og:type" content={type} />
 <meta property="og:locale" content="es_AR" />
 <meta property="og:site_name" content={site.legalName} />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
-{imageUrl && <meta property="og:image" content={imageUrl} />}
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+{jsonLd.map((o) => (
+  <script is:inline type="application/ld+json" set:html={ld(o)} />
+))}

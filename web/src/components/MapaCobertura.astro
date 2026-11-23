@@ -1,0 +1,86 @@
+---
+/**
+ * Coverage map of Argentina by province (IGN data, see scripts/build_map.py).
+ * Pure SVG + links: clicking a province opens the gallery filtered by it. No JavaScript.
+ */
+import mapa from '@/data/argentina-provincias.json';
+import { FOCUS_PROVINCES } from '@/lib/site';
+
+interface Props {
+  counts: Record<string, number>;
+}
+const { counts } = Astro.props;
+const focus = new Set<string>(FOCUS_PROVINCES);
+const max = Math.max(1, ...Object.values(counts));
+// 4-step scale on the primary ramp; provinces without projects stay neutral.
+const shade = (n: number) =>
+  n === 0
+    ? 'fill-white'
+    : ['fill-primary-200', 'fill-primary-300', 'fill-primary-500', 'fill-primary-700'][
+        Math.min(3, Math.floor(((n - 1) / max) * 4))
+      ];
+const href = (name: string) => `/obras?provincia=${encodeURIComponent(name)}`;
+const label = (name: string, n: number) =>
+  `${name}: ${n === 0 ? 'sin obras publicadas' : n === 1 ? '1 obra' : `${n} obras`}`;
+---
+
+<div class="grid items-start gap-10 lg:grid-cols-[minmax(0,26rem)_1fr]">
+  <svg
+    viewBox={mapa.viewBox}
+    class="mx-auto w-full max-w-sm lg:max-w-none"
+    role="group"
+    aria-label="Mapa de obras por provincia"
+  >
+    {mapa.provinces.map((p) => {
+      const n = counts[p.name] ?? 0;
+      return (
+        <a href={href(p.name)} aria-label={label(p.name, n)} class="group outline-none">
+          <title>{label(p.name, n)}</title>
+          <path
+            d={p.d}
+            class:list={[
+              shade(n),
+              'stroke-primary-900 transition-colors group-hover:fill-accent group-focus-visible:fill-accent',
+              focus.has(p.name) ? 'stroke-[1.25]' : 'stroke-[0.5]',
+            ]}
+          />
+        </a>
+      );
+    })}
+  </svg>
+
+  <div>
+    <h2 class="text-h3">Obras por provincia</h2>
+    <p class="mt-2 text-ink-muted">Elegí una provincia en el mapa o en la lista para ver sus obras.</p>
+    <ul class="mt-4 flex items-center gap-3 text-sm" aria-label="Referencias">
+      <li class="flex items-center gap-1.5">
+        <span class="size-4 rounded-sm border border-primary-900 bg-white" />
+        Sin obras
+      </li>
+      <li class="flex items-center gap-1.5">
+        <span class="size-4 rounded-sm bg-primary-200" />
+        Pocas
+      </li>
+      <li class="flex items-center gap-1.5">
+        <span class="size-4 rounded-sm bg-primary-700" />
+        Más obras
+      </li>
+    </ul>
+    <ul class="mt-6 grid gap-x-6 sm:grid-cols-2">
+      {mapa.provinces
+        .map((p) => ({ name: p.name, n: counts[p.name] ?? 0 }))
+        .sort(
+          (a, b) =>
+            Number(focus.has(b.name)) - Number(focus.has(a.name)) || b.n - a.n || a.name.localeCompare(b.name, 'es'),
+        )
+        .map(({ name, n }) => (
+          <li class="border-b border-line">
+            <a href={href(name)} class="flex min-h-11 items-center justify-between gap-3 hover:text-primary-700">
+              <span class:list={[focus.has(name) && 'font-semibold']}>{name}</span>
+              <span class="text-sm text-ink-muted tabular-nums">{n}</span>
+            </a>
+          </li>
+        ))}
+    </ul>
+  </div>
+</div>

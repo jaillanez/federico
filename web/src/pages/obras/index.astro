@@ -1,0 +1,28 @@
+---
+import { getPage } from '@/lib/content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Section from '@/components/Section.astro';
+import CardGrid from '@/components/CardGrid.astro';
+import Galeria, { type GaleriaItem } from '@/islands/Galeria';
+import { getProject, getProjects } from '@/lib/api';
+import { filterOptions } from '@/lib/catalog';
+
+const page = await getPage('obras');
+const projects = await getProjects();
+const details = await Promise.all(projects.map((p) => getProject(p.slug)));
+const items: GaleriaItem[] = projects.map((p, i) => ({ ...p, fotos: details[i]?.imagenes ?? [] }));
+const options = filterOptions(projects);
+---
+
+<BaseLayout title={page.seoTitle} description={page.seoDescription} image="/og/obras.png">
+  <PageHero eyebrow={page.eyebrow} title={page.h1} lead={page.bajada} />
+
+  <Section id="servicios" title={page.serviciosTitulo} eyebrow="Especialidades">
+    <CardGrid items={page.servicios} cols={4} tone="surface" />
+  </Section>
+
+  <Section id="galeria" tone="surface" title="Galería de obras" eyebrow="Obras reales">
+    <Galeria client:idle projects={items} {...options} />
+  </Section>
+</BaseLayout>

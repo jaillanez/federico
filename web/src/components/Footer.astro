@@ -1,7 +1,9 @@
 ---
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { site, nav, legalLinks, telHref } from '@/lib/site';
+import { nav, legalLinks, telHref } from '@/lib/site';
+import { getSiteData } from '@/lib/api';
+const { site } = await getSiteData();
 const year = new Date().getFullYear();
 ---
 

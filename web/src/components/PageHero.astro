@@ -1,0 +1,20 @@
+---
+/** Dark blueprint hero used at the top of every public page. Holds the page's only <h1>. */
+interface Props {
+  eyebrow?: string | undefined;
+  title: string;
+  lead?: string | undefined;
+  size?: 'lg' | 'md';
+}
+const { eyebrow, title, lead, size = 'md' } = Astro.props;
+---
+
+<section class="bg-blueprint text-white">
+  <div class:list={['container-sei', size === 'lg' ? 'py-16 sm:py-24 lg:py-28' : 'py-12 sm:py-16 lg:py-20']}>
+    <slot name="before" />
+    {eyebrow && <p class="eyebrow text-accent">{eyebrow}</p>}
+    <h1 class:list={['mt-4 max-w-4xl text-white', size === 'lg' ? 'text-display' : 'text-h1']}>{title}</h1>
+    {lead && <p class="mt-5 max-w-2xl text-lead text-primary-100">{lead}</p>}
+    <slot />
+  </div>
+</section>
