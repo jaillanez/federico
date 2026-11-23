@@ -1,9 +1,9 @@
 """Application settings, loaded from environment variables (see .env.example)."""
 
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4321"])
     # Secret used to hash IPs of leads and sign sessions. Must be overridden.
     secret_key: str = "change-me"  # noqa: S105
+
+    @model_validator(mode="after")
+    def _require_strong_secret_in_production(self) -> Self:
+        weak = {"change-me", "dev-secret-change-me"}
+        if self.is_production and (self.secret_key in weak or len(self.secret_key) < 32):
+            raise ValueError("SECRET_KEY: usá una clave aleatoria de 32+ caracteres")
+        return self
 
     @property
     def is_production(self) -> bool:
