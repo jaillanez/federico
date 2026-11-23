@@ -44,6 +44,8 @@ const ld = [professionalService(site, site_url), ...jsonLd];
     <WhatsAppFloat />
     <script>
       import { track, type AnalyticsEvent } from '@/lib/analytics';
+      import { captureUtm } from '@/lib/utm';
+      document.addEventListener('astro:page-load', captureUtm);
       // Links/buttons with data-event="whatsapp_click" etc. report a cookie-less event.
       document.addEventListener('click', (e) => {
         const el = (e.target as Element | null)?.closest<HTMLElement>('[data-event]');

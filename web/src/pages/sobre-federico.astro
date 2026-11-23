@@ -8,6 +8,8 @@ import Pending from '@/components/Pending.astro';
 import { person } from '@/lib/jsonld';
 import { SECTORES } from '@/lib/sectores';
 import { getSiteData } from '@/lib/api';
+import ContactoForm from '@/islands/ContactoForm';
+import { turnstileSiteKey } from '@/lib/turnstile-key';
 
 const page = await getPage('sobre-federico');
 const { site } = await getSiteData();
@@ -87,6 +89,17 @@ const { site } = await getSiteData();
         </li>
       ))}
     </ul>
-    <!-- Phase 3: short contact form (origen=contacto) goes here. -->
+  </Section>
+
+  <Section
+    id="contacto"
+    tone="surface"
+    title="Escribile a Federico"
+    eyebrow="Contacto"
+    lead="¿Una consulta puntual? Dejanos tu mensaje y te respondemos a la brevedad."
+  >
+    <div class="max-w-2xl rounded-card border border-line bg-white p-5 shadow-card sm:p-8">
+      <ContactoForm client:visible turnstileSiteKey={turnstileSiteKey()} />
+    </div>
   </Section>
 </BaseLayout>

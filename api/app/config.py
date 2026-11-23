@@ -28,6 +28,39 @@ class Settings(BaseSettings):
     public_media_url: str = "http://localhost:9000/sei-public"
     # Secret used to hash IPs of leads and sign sessions. SecretStr keeps it out of reprs.
     secret_key: SecretStr = SecretStr("change-me")
+    # Public URL of the website (links in emails, e.g. to the admin panel).
+    public_site_url: str = "http://localhost:4321"
+
+    # --- S3-compatible storage (MinIO locally, Cloudflare R2 in production) ---
+    # Endpoint as reached by the API; None means AWS S3.
+    s3_endpoint_url: str | None = "http://localhost:9010"
+    s3_region: str = "auto"
+    s3_access_key: SecretStr = SecretStr("sei-minio")
+    s3_secret_key: SecretStr = SecretStr("sei-minio-secret")
+    s3_bucket_public: str = "sei-public"
+    # Lead files: never public, only reachable through short-lived signed URLs.
+    s3_bucket_private: str = "sei-private"
+
+    # --- Email ---
+    # smtp: real delivery (Mailpit locally); memory: kept in a list (tests); console: logged.
+    mail_backend: Literal["smtp", "memory", "console"] = "smtp"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1125
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_starttls: bool = False
+    mail_from: str = "S.E.I. Servicio Eléctrico Integral <no-responder@servielect.com.ar>"
+    # Who receives new-lead notifications. TODO(federico): confirm the address.
+    mail_leads_to: str = "servielect@infovia.com.ar"
+
+    # --- Cloudflare Turnstile ---
+    # Empty disables the captcha check (only allowed outside production).
+    turnstile_secret_key: SecretStr = SecretStr("")
+
+    # --- Leads ---
+    leads_per_ip_per_hour: int = 5
+    # Ley 25.326: leads in "nuevo" or "descartado" are deleted after this many months.
+    lead_retention_months: int = 24
 
     @property
     def is_production(self) -> bool:
@@ -43,6 +76,10 @@ class Settings(BaseSettings):
             raise InsecureConfigError(
                 f"SECRET_KEY: usá una clave aleatoria de {MIN_SECRET_LENGTH}+ caracteres"
             )
+        if self.is_production and not self.turnstile_secret_key.get_secret_value():
+            raise InsecureConfigError("TURNSTILE_SECRET_KEY es obligatoria en producción")
+        if self.is_production and self.mail_backend != "smtp":
+            raise InsecureConfigError("MAIL_BACKEND tiene que ser smtp en producción")
         return self
 
 
