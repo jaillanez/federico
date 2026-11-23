@@ -49,7 +49,12 @@ async function build() {
     await rename(NEXT, DIST);
     await rm(OLD, { recursive: true, force: true });
   }
-  Object.assign(state, { building: false, lastBuildAt: new Date().toISOString(), lastOk: ok, lastDurationMs: Date.now() - started });
+  Object.assign(state, {
+    building: false,
+    lastBuildAt: new Date().toISOString(),
+    lastOk: ok,
+    lastDurationMs: Date.now() - started,
+  });
   console.log(`[build-server] build ${ok ? 'OK' : 'FAILED'} in ${state.lastDurationMs} ms`);
   if (state.queued) {
     state.queued = false;
@@ -65,14 +70,25 @@ function authorized(req) {
 }
 
 const TYPES = {
-  '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8', '.ico': 'image/x-icon',
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.woff2': 'font/woff2',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.ico': 'image/x-icon',
 };
 
 async function findFile(urlPath) {
   const clean = normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, '');
-  const candidates = clean.endsWith('/') ? [join(clean, 'index.html')] : [clean, `${clean}.html`, join(clean, 'index.html')];
+  const candidates = clean.endsWith('/')
+    ? [join(clean, 'index.html')]
+    : [clean, `${clean}.html`, join(clean, 'index.html')];
   for (const c of candidates) {
     const full = join(DIST, c);
     if (!full.startsWith(DIST + sep)) continue; // path traversal guard (not dist-next/ etc.)
