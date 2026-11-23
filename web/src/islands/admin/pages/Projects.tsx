@@ -56,7 +56,7 @@ export default function Projects() {
                   href={`#/obras/${p.id}`}
                   class="flex h-full flex-col overflow-hidden rounded-card border border-line bg-white shadow-card hover:border-primary-300"
                 >
-                  <div class="bg-blueprint aspect-[16/9]">
+                  <div class="bg-blueprint aspect-[16/9] overflow-hidden">
                     {p.portada?.sources[0] && (
                       <img
                         src={p.portada.sources[Math.min(1, p.portada.sources.length - 1)]?.webp}
