@@ -25,7 +25,7 @@ def ensure_bucket(name: str) -> bool:
 def main() -> None:
     s = get_settings()
     s3 = client()
-    for name in (s.s3_bucket_public, s.s3_bucket_private):
+    for name in (s.s3_bucket_public, s.s3_bucket_private, s.backup_bucket):
         print(f"{'Creado' if ensure_bucket(name) else 'Ya existe'}: {name}")
     policy = {
         "Version": "2012-10-17",
@@ -42,10 +42,11 @@ def main() -> None:
         s3.put_bucket_policy(Bucket=s.s3_bucket_public, Policy=json.dumps(policy))
     except ClientError as exc:  # R2 manages public access from its dashboard instead
         print(f"No se pudo fijar la política pública ({exc.response['Error']['Code']}).")
-    try:
-        s3.delete_bucket_policy(Bucket=s.s3_bucket_private)
-    except ClientError:
-        pass
+    for private in (s.s3_bucket_private, s.backup_bucket):
+        try:
+            s3.delete_bucket_policy(Bucket=private)
+        except ClientError:
+            pass
     print("Listo.")
 
 

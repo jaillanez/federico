@@ -21,6 +21,7 @@ os.environ.setdefault("S3_ACCESS_KEY", "sei-minio")
 os.environ.setdefault("S3_SECRET_KEY", "sei-minio-secret")
 os.environ["S3_BUCKET_PUBLIC"] = "sei-test-public"
 os.environ["S3_BUCKET_PRIVATE"] = "sei-test-private"
+os.environ["BACKUP_BUCKET"] = "sei-test-backups"
 os.environ["PUBLIC_MEDIA_URL"] = f"{os.environ['S3_ENDPOINT_URL']}/sei-test-public"
 os.environ["MAIL_BACKEND"] = "memory"
 os.environ["TURNSTILE_SECRET_KEY"] = ""
