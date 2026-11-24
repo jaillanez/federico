@@ -1,0 +1,51 @@
+# Variant for a SHARED server that already has a front proxy on 80/443 (no ports published here).
+#   docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.edge.yml --env-file .env.prod ...
+# - our Caddy joins the front proxy's network as `sei-gateway` and serves plain HTTP on :80
+# - MinIO (built from source) replaces R2 until there is a Cloudflare account
+# Register the domain in the front proxy with infra/edge-register.sh.
+services:
+  caddy:
+    ports: !reset []
+    environment:
+      EDGE_PROXY_IP: ${EDGE_PROXY_IP}
+      S3_BUCKET_PUBLIC: ${S3_BUCKET_PUBLIC}
+      S3_BUCKET_PRIVATE: ${S3_BUCKET_PRIVATE}
+    volumes: !override
+      - ./Caddyfile.edge:/etc/caddy/Caddyfile:ro
+      - ./caddy/site.caddy:/etc/caddy/site.caddy:ro
+      - ./redirects.caddy:/etc/caddy/redirects.caddy:ro
+      - site:/srv/site:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
+      edge:
+        aliases: [sei-gateway]
+
+  minio:
+    build: ./minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+
+  migrate:
+    depends_on:
+      minio:
+        condition: service_healthy
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-suite-turnos_edge}
+
+volumes:
+  minio-data:

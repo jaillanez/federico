@@ -265,3 +265,18 @@ async def test_failed_upload_rolls_back_and_removes_uploaded_files(
     bucket = get_settings().s3_bucket_private
     listing = storage.client().list_objects_v2(Bucket=bucket, Prefix=stored[0])
     assert listing.get("KeyCount", 0) == 0  # the first file was cleaned up
+
+
+def test_signed_urls_can_use_a_public_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("S3_PRESIGN_ENDPOINT_URL", "https://sitio.example")
+    get_settings.cache_clear()
+    storage.client.cache_clear()
+    try:
+        url = storage.signed_private_url("leads/x/y.pdf", "factura.pdf")
+        assert url.startswith(
+            f"https://sitio.example/{get_settings().s3_bucket_private}/leads/x/y.pdf?"
+        )
+        assert "X-Amz-Signature=" in url
+    finally:
+        get_settings.cache_clear()
+        storage.client.cache_clear()

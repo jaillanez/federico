@@ -63,7 +63,7 @@ lint: ## Lint and type-check API and web
 	$(COMPOSE) exec web sh -c 'npm run lint && npm run check'
 
 # --- Production (run on the server, in /opt/sei) ---
-PROD := docker compose -f infra/docker-compose.prod.yml --env-file .env.prod
+PROD := docker compose -f infra/docker-compose.prod.yml $(shell grep -qs '^SEI_EDGE=1' .env.prod && echo -f infra/docker-compose.edge.yml) --env-file .env.prod
 
 deploy: ## [server] Deploy origin/main (or REF=<sha>) with one command
 	infra/deploy.sh $(REF)

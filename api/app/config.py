@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # --- S3-compatible storage (MinIO locally, Cloudflare R2 in production) ---
     # Endpoint as reached by the API; None means AWS S3.
     s3_endpoint_url: str | None = "http://localhost:9010"
+    # Endpoint used only to SIGN download URLs, when browsers reach the storage through another
+    # address (self-hosted MinIO behind our Caddy: the public site URL). None = s3_endpoint_url.
+    s3_presign_endpoint_url: str | None = None
     s3_region: str = "auto"
     s3_access_key: SecretStr = SecretStr("sei-minio")
     s3_secret_key: SecretStr = SecretStr("sei-minio-secret")
