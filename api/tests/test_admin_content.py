@@ -101,7 +101,7 @@ async def test_settings_roundtrip_and_validation(
 ) -> None:
     body = {
         "contacto": {"direccion": "Brasil 359 (O), San Juan", "telefono": "0264-4220106",
-                     "celular": "0264 15 5651609", "email": "servielect@infovia.com.ar"},
+                     "celular": "0264 15 5651609", "email": "monetidel@gmail.com"},
         "whatsapp": {"numero": "5492645651609"},
         "metricas": [
             {"clave": "obras", "etiqueta": "Obras ejecutadas", "valor": 120, "sufijo": "+"}

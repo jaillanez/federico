@@ -145,7 +145,7 @@ SETTINGS: dict[str, Any] = {
         "direccion": "Brasil 359 (O), San Juan",
         "telefono": "0264-4220106",
         "celular": "0264 15 5651609",
-        "email": "servielect@infovia.com.ar",
+        "email": "monetidel@gmail.com",
     },
     # TODO(federico): confirm the WhatsApp number (assumed: cell phone on the card).
     "whatsapp": {"numero": "5492645651609"},

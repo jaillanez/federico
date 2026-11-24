@@ -23,7 +23,7 @@ export const defaultSite: SiteConfig = {
   address: 'Brasil 359 (O), San Juan',
   phone: '0264-4220106',
   mobile: '0264 15 5651609',
-  email: 'servielect@infovia.com.ar',
+  email: 'monetidel@gmail.com',
   // TODO(federico): confirm WhatsApp number (assumed: the mobile on his card).
   whatsapp: '5492645651609',
   coverage: ['San Juan', 'Mendoza', 'La Rioja', 'Catamarca', 'Todo el país'],

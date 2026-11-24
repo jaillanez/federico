@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     smtp_starttls: bool = False
     mail_from: str = "S.E.I. Servicio Eléctrico Integral <no-responder@servielect.com.ar>"
     # Who receives new-lead notifications. TODO(federico): confirm the address.
-    mail_leads_to: str = "servielect@infovia.com.ar"
+    mail_leads_to: str = "monetidel@gmail.com"
 
     # --- Cloudflare Turnstile ---
     # Empty disables the captcha check (only allowed outside production).
