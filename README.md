@@ -114,3 +114,74 @@ make seed-local   # en otra terminal: datos de ejemplo + admin de desarrollo
 El cluster vive en `.local/pgdata` (ignorado por git) y escucha solo en `localhost:5433`, así que no
 interfiere con otro PostgreSQL que ya tengas en el 5432. MinIO y Mailpit (fases 3 y 4) todavía no
 tienen equivalente sin Docker.
+
+## Producción
+
+Arquitectura: un servidor (VPS) con Docker Compose (`infra/docker-compose.prod.yml`):
+
+| Servicio | Qué hace |
+| --- | --- |
+| `caddy` | HTTPS automático (Let's Encrypt), encabezados de seguridad y CSP, sirve el sitio estático y reenvía `/api` |
+| `api` | FastAPI (usuario de base con permisos mínimos) |
+| `migrate` | Corre las migraciones y crea los buckets con el usuario dueño; después termina |
+| `scheduler` | Cada hora regenera el sitio si llegó la fecha de un artículo programado; cada día a las 03:30 borra consultas vencidas (Ley 25.326) y hace el backup |
+| `web-build` | Regenera el sitio estático cuando la API lo pide (al publicar) |
+| `db` | PostgreSQL 16 |
+
+Archivos en **Cloudflare R2**: `sei-public` (fotos, con dominio propio de R2), `sei-private`
+(documentación de consultas) y `sei-backups`.
+
+### Primera instalación
+
+1. **Servidor**: Ubuntu 24.04 con Docker. Usuario de deploy sin contraseña, solo con clave SSH.
+2. **Código**: `git clone https://github.com/jaillanez/federico.git /opt/sei`.
+3. **Secretos**: copiá `infra/.env.prod.example` a `/opt/sei/.env.prod`, completalo
+   (`openssl rand -hex 32` para cada secreto) y protegelo con `chmod 600 .env.prod`.
+4. **DNS**: registros `A` (y `AAAA` si hay IPv6) de `servielect.com.ar` y `www` apuntando al
+   servidor. El dominio está activo en NIC Argentina pero hoy no tiene DNS configurado.
+5. **R2**: creá los 3 buckets, un token con permisos sobre ellos y un dominio público para
+   `sei-public` (p. ej. `media.servielect.com.ar`, valor de `PUBLIC_MEDIA_URL` y `MEDIA_ORIGIN`).
+6. **Turnstile**: creá el sitio en Cloudflare (modo invisible) y cargá las dos claves.
+7. **Levantar**: `make deploy` (construye, migra, crea buckets, arranca y genera el sitio).
+8. **Primer usuario del panel**: `make create-admin-prod`.
+
+### Deploy
+
+- **Un comando** en el servidor: `make deploy` (o `make deploy REF=<sha>`).
+- **Automático**: al fusionar en `main`, cuando el CI pasa, el workflow `Deploy` entra por SSH y
+  corre `infra/deploy.sh`. Necesita los secretos del repositorio `DEPLOY_HOST`, `DEPLOY_USER`,
+  `DEPLOY_SSH_KEY` y `DEPLOY_KNOWN_HOSTS` (`ssh-keyscan <servidor>`, fija la huella del servidor).
+  Sin ellos, el paso se omite. Solo despliega `main`; configurá el entorno `production` del
+  repositorio con revisores obligatorios para que ningún deploy salga sin aprobación.
+
+### Backups y restauración
+
+- Diario a las 03:30: `pg_dump` cifrado con AES-256 (`BACKUP_PASSPHRASE`) en `sei-backups`,
+  30 días de retención. Forzarlo: `make backup`. Verificar el último sin tocar nada:
+  `make restore-check`.
+- **Guardá `BACKUP_PASSPHRASE` también fuera del servidor**: sin ella los backups no se pueden leer.
+- Restaurar (reemplaza los datos de la base de destino):
+
+  ```bash
+  docker compose -f infra/docker-compose.prod.yml --env-file .env.prod exec scheduler \
+    /app/infra/restore.sh latest postgresql://sei_owner:<clave>@db:5432/sei --yes
+  ```
+
+  Para probar en limpio, restaurá primero en una base nueva (`CREATE DATABASE sei_prueba`). El CI
+  hace exactamente eso en cada PR (`infra/smoke-test.sh`).
+
+### Monitoreo
+
+El workflow `Uptime` revisa cada 10 minutos, desde GitHub (fuera del servidor), la home, la API
+con la base y el vencimiento del certificado. Si falla, GitHub le manda un email al dueño del
+repositorio. Se activa creando la variable de repositorio `SITE_URL=https://servielect.com.ar`.
+
+### Redirecciones del sitio anterior
+
+`infra/redirects.caddy` tiene las 301 desde las URLs viejas. Hoy está vacío porque el dominio no
+tenía sitio ni registros archivados; agregá líneas si aparecen URLs viejas en Google Search Console.
+
+### Guía para Federico
+
+[docs/guia-panel.md](docs/guia-panel.md): subir una obra, responder una consulta y publicar un
+artículo, con capturas.

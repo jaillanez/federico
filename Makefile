@@ -2,7 +2,7 @@
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 API := $(COMPOSE) exec api
 
-.PHONY: help dev down logs migrate seed create-admin test lint
+.PHONY: help dev down logs migrate seed create-admin test lint deploy backup restore-check
 
 help: ## Show available commands
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*## "}{printf "  make %-14s %s\n",$$1,$$2}'
@@ -61,3 +61,19 @@ stop-local: ## [sin Docker] Stop the project's PostgreSQL
 lint: ## Lint and type-check API and web
 	$(API) sh -c 'ruff check . && ruff format --check . && mypy app tests'
 	$(COMPOSE) exec web sh -c 'npm run lint && npm run check'
+
+# --- Production (run on the server, in /opt/sei) ---
+PROD := docker compose -f infra/docker-compose.prod.yml --env-file .env.prod
+
+deploy: ## [server] Deploy origin/main (or REF=<sha>) with one command
+	infra/deploy.sh $(REF)
+
+backup: ## [server] Run an encrypted backup to R2 now
+	$(PROD) exec -T scheduler /app/infra/backup.sh
+
+restore-check: ## [server] Download and verify the latest backup without restoring
+	$(PROD) exec -T scheduler /app/infra/restore.sh latest postgresql://unused
+
+create-admin-prod: ## [server] Create a panel user in production
+	$(PROD) exec api python -m app.scripts.create_admin
+

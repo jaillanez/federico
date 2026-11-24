@@ -1,0 +1,23 @@
+# CI smoke test of the production stack on https://localhost (Caddy internal CA):
+#   docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.smoke.yml \
+#     --env-file infra/.env.smoke up -d --build --wait
+# Replaces R2 with MinIO (built from source) and the SMTP provider with Mailpit.
+services:
+  minio:
+    build: ./minio
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9000/minio/health/live"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
+  migrate:
+    depends_on:
+      minio:
+        condition: service_healthy

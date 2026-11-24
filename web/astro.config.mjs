@@ -23,10 +23,20 @@ export default defineConfig({
   trailingSlash: 'never',
   devToolbar: { enabled: false },
   build: { format: 'file' },
+  // CSP: Astro hashes every inline script/style it emits and adds a <meta> policy per page.
+  // Caddy adds the directives a <meta> cannot carry (frame-ancestors, form-action...).
+  security: {
+    csp: {
+      scriptDirective: { resources: ["'self'", 'https://challenges.cloudflare.com'] },
+      // 'unsafe-inline' for styles: SSR'd style="--var" attributes cannot be hashed.
+      styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
+    },
+  },
   integrations: [preact(), sitemap({ filter: (page) => !page.includes('/admin') }), devOnlyStyleGuide],
   vite: {
     plugins: [tailwindcss()],
     // In `astro dev` without Caddy, forward /api to FastAPI (same-origin like production).
     server: { proxy: { '/api': process.env.API_INTERNAL_URL ?? 'http://localhost:8000' } },
+    preview: { proxy: { '/api': process.env.API_INTERNAL_URL ?? 'http://localhost:8000' } },
   },
 });

@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     s3_bucket_public: str = "sei-public"
     # Lead files: never public, only reachable through short-lived signed URLs.
     s3_bucket_private: str = "sei-private"
+    # Encrypted database backups (private; see infra/backup.sh).
+    backup_bucket: str = "sei-backups"
 
     # --- Email ---
     # smtp: real delivery (Mailpit locally); memory: kept in a list (tests); console: logged.

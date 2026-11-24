@@ -1,0 +1,7 @@
+node_modules
+dist
+dist-next
+dist-old
+.astro
+.impeccable
+dist-build

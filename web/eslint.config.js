@@ -4,7 +4,7 @@ import astro from 'eslint-plugin-astro';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist/', '.astro/', 'node_modules/'] },
+  { ignores: ['dist/', 'dist-*/', '.astro/', 'node_modules/', '.impeccable/'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   ...astro.configs.recommended,

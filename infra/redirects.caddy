@@ -1,0 +1,7 @@
+# 301 redirects from the previous site (servielect.com.ar).
+# The domain had no DNS records and nothing archived when we checked (2026-11-23), so there is no
+# list yet. TODO(federico): if you remember old URLs (or they show up in Google Search Console
+# as 404s), add one line per URL:
+#
+#   redir /servicios.html /asesoramiento-tarifario permanent
+#   redir /contacto.html /diagnostico permanent
