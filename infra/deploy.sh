@@ -20,5 +20,6 @@ echo "→ Desplegando $(git rev-parse --short HEAD)"
 "${DC[@]}" exec -T web-build sh -c \
   'wget -qO- --header "Authorization: Bearer $REBUILD_WEBHOOK_TOKEN" --post-data "" http://localhost:4322/__rebuild' \
   > /dev/null || true
-docker image prune -f > /dev/null
+# Only this project's leftover images: on a shared server, never prune other apps' images.
+docker image prune -f --filter "label=com.docker.compose.project=sei" > /dev/null
 echo "✓ Deploy terminado"
