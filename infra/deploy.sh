@@ -4,9 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 REF="${1:-origin/main}"
-DC=(docker compose -f infra/docker-compose.prod.yml --env-file .env.prod)
-
 [[ -f .env.prod ]] || { echo "Falta .env.prod (ver infra/.env.prod.example)"; exit 1; }
+DC=(docker compose -f infra/docker-compose.prod.yml)
+# Shared server with its own front proxy on 80/443 (see infra/docker-compose.edge.yml).
+if grep -q '^SEI_EDGE=1' .env.prod; then DC+=(-f infra/docker-compose.edge.yml); fi
+DC+=(--env-file .env.prod)
 git fetch --quiet origin
 git checkout --quiet --detach "$REF"
 echo "→ Desplegando $(git rev-parse --short HEAD)"

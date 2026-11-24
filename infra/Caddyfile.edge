@@ -1,0 +1,23 @@
+# Behind a shared front proxy (e.g. the suite-turnos Caddy on the 173.212.195.122 VPS), which
+# terminates HTTPS and forwards plain HTTP here through the docker network `suite-turnos_edge`.
+{
+	auto_https off
+	admin off
+	servers {
+		# Only the front proxy may tell us the visitor's IP (used by the lead rate limit).
+		trusted_proxies static {$EDGE_PROXY_IP}/32
+	}
+}
+
+:80 {
+	# Self-hosted MinIO instead of R2: public photos, and private lead files that only open with
+	# a signed URL (the Host header is passed through, so the signature still matches).
+	handle /{$S3_BUCKET_PUBLIC}/* {
+		reverse_proxy minio:9000
+	}
+	handle /{$S3_BUCKET_PRIVATE}/* {
+		reverse_proxy minio:9000
+	}
+
+	import /etc/caddy/site.caddy
+}

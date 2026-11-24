@@ -19,11 +19,11 @@ SIGNED_URL_SECONDS = 300  # signed downloads expire after 5 minutes
 
 
 @lru_cache
-def client() -> "S3Client":
+def client(endpoint_url: str | None = None) -> "S3Client":
     s = get_settings()
     return boto3.client(
         "s3",
-        endpoint_url=s.s3_endpoint_url,
+        endpoint_url=endpoint_url or s.s3_endpoint_url,
         region_name=s.s3_region,
         aws_access_key_id=s.s3_access_key.get_secret_value(),
         aws_secret_access_key=s.s3_secret_key.get_secret_value(),
@@ -91,7 +91,8 @@ async def delete_private(keys: list[str]) -> None:
 def signed_private_url(key: str, filename: str, expires: int = SIGNED_URL_SECONDS) -> str:
     """Short-lived download URL for a private object (no network call)."""
     safe_name = filename.replace('"', "").replace("\r", "").replace("\n", "")
-    return client().generate_presigned_url(
+    presigner = client(get_settings().s3_presign_endpoint_url)
+    return presigner.generate_presigned_url(
         "get_object",
         Params={
             "Bucket": get_settings().s3_bucket_private,
