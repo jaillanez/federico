@@ -3,6 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/PageHero.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import Badge from '@/components/ui/Badge.astro';
+import ArticleCover from '@/components/ArticleCover.astro';
 import Button from '@/components/ui/Button.astro';
 import { getArticle, getArticles, type ArticleDetail } from '@/lib/api';
 import { article as articleLd, breadcrumbs } from '@/lib/jsonld';
@@ -32,7 +33,7 @@ const description = a.seo_description ?? a.extracto ?? a.titulo;
   description={description.length > 155 ? `${description.slice(0, description.lastIndexOf(' ', 152))}…` : description}
   image={og}
   type="article"
-  jsonLd={[articleLd(a, og, siteUrl(Astro.site)), breadcrumbs(crumbs, siteUrl(Astro.site))]}
+  jsonLd={[articleLd(a, a.portada_url ?? og, siteUrl(Astro.site)), breadcrumbs(crumbs, siteUrl(Astro.site))]}
   ctaTitle="¿Querés aplicarlo a tu empresa?"
 >
   <PageHero eyebrow="Artículo" title={a.titulo} lead={a.extracto ?? undefined}>
@@ -71,6 +72,11 @@ const description = a.seo_description ?? a.extracto ?? a.titulo;
       <div />
     )}
     <article class="prose-sei max-w-3xl">
+      {a.portada_url && (
+        <div class="not-prose mb-8 overflow-hidden rounded-card">
+          <ArticleCover url={a.portada_url} eager sizes="(min-width: 1024px) 48rem, 100vw" />
+        </div>
+      )}
       <Fragment set:html={html} />
       {a.tags.length > 0 && (
         <ul class="not-prose mt-10 flex flex-wrap items-center gap-2 border-t border-line pt-6" aria-label="Etiquetas">

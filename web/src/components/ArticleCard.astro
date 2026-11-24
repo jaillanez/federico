@@ -2,6 +2,7 @@
 import type { ArticleSummary } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import Badge from './ui/Badge.astro';
+import ArticleCover from './ArticleCover.astro';
 interface Props {
   article: ArticleSummary;
   headingLevel?: 'h2' | 'h3';
@@ -9,7 +10,16 @@ interface Props {
 const { article: a, headingLevel: H = 'h3' } = Astro.props;
 ---
 
-<article class="reveal group relative flex flex-col gap-3 rounded-card border border-line bg-white p-5 shadow-card transition-colors hover:border-primary-300 sm:p-6">
+<article class="reveal group relative flex flex-col gap-3 overflow-hidden rounded-card border border-line bg-white p-5 shadow-card transition-colors hover:border-primary-300 sm:p-6">
+  {a.portada_url && (
+    <div class="-mx-5 -mt-5 mb-1 overflow-hidden sm:-mx-6 sm:-mt-6">
+      <ArticleCover
+        url={a.portada_url}
+        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+        class="transition-transform duration-300 group-hover:scale-[1.03]"
+      />
+    </div>
+  )}
   <p class="text-sm text-ink-muted">
     <time datetime={a.publicado_at}>{formatDate(a.publicado_at)}</time>
   </p>
