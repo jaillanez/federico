@@ -34,13 +34,19 @@ www.{$DOMAIN} {
 		request_body {
 			max_size 300MB
 		}
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			# Overwrite (never append) client-supplied forwarding headers.
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 	handle /api/* {
 		request_body {
 			max_size 45MB
 		}
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			# Overwrite (never append) client-supplied forwarding headers.
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle {

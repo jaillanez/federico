@@ -70,3 +70,11 @@ def test_objects_cli_roundtrip_latest_and_prune(tmp_path: Path) -> None:
     assert objects.main(["prune", bucket, prefix, "-1"]) == 0  # everything is "older"
     assert objects.main(["latest", bucket, prefix]) == 1
     assert objects.main(["unknown", bucket]) == 2
+
+
+def test_backup_logs_never_contain_credentials() -> None:
+    from app.scripts.scheduler import redact
+
+    msg = 'pg_dump: error: connection to "postgresql://sei_owner:s3cr3t@db:5432/sei" failed'
+    assert "s3cr3t" not in redact(msg)
+    assert "postgresql://***@db:5432/sei" in redact(msg)

@@ -7,6 +7,7 @@ No cron daemon needed; state is just "last run" timestamps in memory.
 
 import asyncio
 import logging
+import re
 import subprocess
 from datetime import UTC, datetime, timedelta
 
@@ -18,6 +19,11 @@ from app.services.scheduled import rebuild_if_articles_due
 log = logging.getLogger("scheduler")
 ART = timedelta(hours=-3)  # Argentina, no DST
 DAILY_AT = (3, 30)
+
+
+def redact(text: str) -> str:
+    """Remove credentials from connection URLs before anything reaches the logs."""
+    return re.sub(r"://[^/@\s]+@", "://***@", text)
 
 
 def next_daily(now: datetime) -> datetime:
@@ -37,7 +43,9 @@ async def daily() -> None:
         subprocess.run, ["/app/infra/backup.sh"], capture_output=True, text=True, check=False
     )
     level = logging.INFO if result.returncode == 0 else logging.ERROR
-    log.log(level, "backup exit=%s %s", result.returncode, (result.stdout + result.stderr)[-500:])
+    log.log(
+        level, "backup exit=%s %s", result.returncode, redact(result.stdout + result.stderr)[-500:]
+    )
 
 
 async def main() -> None:

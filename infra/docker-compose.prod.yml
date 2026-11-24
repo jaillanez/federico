@@ -82,7 +82,10 @@ services:
 
   api:
     <<: *api-common
-    environment: *runtime-env
+    environment:
+      <<: *runtime-env
+      # Only Caddy may set X-Forwarded-For (client IP used for the lead rate limit).
+      FORWARDED_ALLOW_IPS: 172.30.0.10
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 10s
@@ -137,9 +140,18 @@ services:
       - site:/srv/site:ro
       - caddy-data:/data
       - caddy-config:/config
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
     depends_on:
       - api
       - web-build
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   db-data:

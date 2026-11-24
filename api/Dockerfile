@@ -24,4 +24,6 @@ COPY . .
 RUN useradd --system --uid 10001 app
 USER app
 # One worker: the rebuild debounce lives in-process (see services/rebuild.py).
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "1"]
+# Forwarded headers are trusted only from FORWARDED_ALLOW_IPS (Caddy's fixed IP in compose);
+# uvicorn's default (127.0.0.1) ignores them from anyone else.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--workers", "1"]

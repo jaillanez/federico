@@ -151,7 +151,8 @@ Archivos en **Cloudflare R2**: `sei-public` (fotos, con dominio propio de R2), `
 - **Automático**: al fusionar en `main`, cuando el CI pasa, el workflow `Deploy` entra por SSH y
   corre `infra/deploy.sh`. Necesita los secretos del repositorio `DEPLOY_HOST`, `DEPLOY_USER`,
   `DEPLOY_SSH_KEY` y `DEPLOY_KNOWN_HOSTS` (`ssh-keyscan <servidor>`, fija la huella del servidor).
-  Sin ellos, el paso se omite.
+  Sin ellos, el paso se omite. Solo despliega `main`; configurá el entorno `production` del
+  repositorio con revisores obligatorios para que ningún deploy salga sin aprobación.
 
 ### Backups y restauración
 
