@@ -1,4 +1,7 @@
 .env
+# Production secrets on the server (/opt/sei/.env.prod) and deploy logs.
+.env.prod
+deploy-*.log
 .DS_Store
 node_modules/
 dist/
