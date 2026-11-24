@@ -18,7 +18,7 @@ echo "→ Desplegando $(git rev-parse --short HEAD)"
 # The site is rebuilt by web-build on start; ask for one more in case content changed meanwhile.
 # The token travels in the container's own environment, never in a command line.
 "${DC[@]}" exec -T web-build sh -c \
-  'wget -qO- --header "Authorization: Bearer $REBUILD_WEBHOOK_TOKEN" --post-data "" http://localhost:4322/__rebuild' \
+  'wget -qO- --header "Authorization: Bearer $REBUILD_WEBHOOK_TOKEN" --post-data "" http://127.0.0.1:4322/__rebuild' \
   > /dev/null || true
 docker image prune -f > /dev/null
 echo "✓ Deploy terminado"
