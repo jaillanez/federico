@@ -20,7 +20,7 @@ Sos un desarrollador full stack senior. Vas a construir desde cero el sitio web 
 2. Construir autoridad nacional: galería de obras reales, artículos técnicos, SEO.
 3. Que Federico lo administre solo desde un panel privado, incluso desde el celular.
 
-**Datos de contacto actuales** (de su tarjeta): Brasil 359 (O), San Juan. Tel/Fax 0264-4220106. Cel. 0264 15 5651609. servielect@infovia.com.ar. Dominio actual: servielect.com.ar. Guárdalos en configuración, nunca repetidos a mano en las plantillas.
+**Datos de contacto actuales** (de su tarjeta): Brasil 359 (O), San Juan. Tel/Fax 0264-4220106. Cel. 0264 15 5651609. Email: monetidel@gmail.com (desde el 24/11/2026; el anterior, servielect@infovia.com.ar, ya no se usa). Dominio actual: servielect.com.ar. Guárdalos en configuración, nunca repetidos a mano en las plantillas.
 
 ## 2. Stack y reglas no negociables
 
