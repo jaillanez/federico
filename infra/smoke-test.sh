@@ -4,6 +4,8 @@ set -euo pipefail
 DC=(docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.smoke.yml --env-file infra/.env.smoke)
 BASE=https://localhost
 fail() { echo "✗ $*"; exit 1; }
+# Fetch into a variable first: `curl | grep -q` breaks under pipefail (grep exits early → SIGPIPE).
+body() { curl -sk "$@"; }
 ok() { echo "✓ $*"; }
 
 echo "→ Esperando el primer build del sitio"
@@ -21,7 +23,8 @@ for h in strict-transport-security content-security-policy x-content-type-option
 done
 grep -qi "^server:" <<<"$headers" && fail "el encabezado Server no debería exponerse"
 ok "encabezados de seguridad"
-curl -sk "$BASE/" | grep -q 'http-equiv="content-security-policy"' || fail "falta la CSP con hashes de Astro"
+home=$(body "$BASE/")
+grep -q 'http-equiv="content-security-policy"' <<<"$home" || fail "falta la CSP con hashes de Astro"
 ok "CSP con hashes"
 
 for p in /obras /consultoria-solar /diagnostico /articulos /admin; do
@@ -29,13 +32,13 @@ for p in /obras /consultoria-solar /diagnostico /articulos /admin; do
 done
 ok "páginas principales 200"
 [[ "$(curl -sk -o /dev/null -w "%{http_code}" "$BASE/no-existe")" == "404" ]] || fail "404 incorrecto"
-curl -sk "$BASE/no-existe" | grep -q "No encontramos esta página" || fail "no se sirve la página 404"
+grep -q "No encontramos esta página" <<<"$(body "$BASE/no-existe")" || fail "no se sirve la página 404"
 ok "404 personalizada"
 [[ "$(curl -sk -o /dev/null -w "%{http_code}" "$BASE/obras/")" == "301" ]] || fail "la barra final no redirige"
-curl -skI "$BASE/admin" | grep -qi "cache-control: no-store" || fail "/admin debería ser no-store"
+grep -qi "cache-control: no-store" <<<"$(body -I "$BASE/admin")" || fail "/admin debería ser no-store"
 ok "redirecciones y caché"
-curl -sk "$BASE/api/health" | grep -q '"database":"ok"' || fail "api/health"
-curl -sk -o /dev/null -w "%{http_code}" "$BASE/api/docs" | grep -q 404 || fail "/api/docs no debería existir en producción"
+grep -q '"database":"ok"' <<<"$(body "$BASE/api/health")" || fail "api/health"
+[[ "$(curl -sk -o /dev/null -w "%{http_code}" "$BASE/api/docs")" == "404" ]] || fail "/api/docs no debería existir en producción"
 ok "API sana y sin docs públicas"
 
 # A real lead through Caddy: upload to the private bucket + emails to Mailpit.
@@ -46,7 +49,8 @@ res=$(curl -sk -X POST "$BASE/api/leads" -H "Origin: $BASE" \
   -F cf-turnstile-response=XXXX.DUMMY.TOKEN -F factura=@/tmp/factura.pdf)
 grep -q '"id"' <<<"$res" || fail "no se pudo crear la consulta: $res"
 for _ in $(seq 1 20); do
-  n=$(curl -s http://127.0.0.1:8025/api/v1/messages | grep -o '"total":[0-9]*' | cut -d: -f2)
+  msgs=$(curl -s http://127.0.0.1:8025/api/v1/messages || true)
+  n=$(grep -o '"total":[0-9]*' <<<"$msgs" | cut -d: -f2 || true)
   [[ "${n:-0}" -ge 2 ]] && break
   sleep 1
 done
