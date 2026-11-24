@@ -12,7 +12,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createReadStream } from 'node:fs';
-import { rename, rm, stat } from 'node:fs/promises';
+import { cp, rename, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
@@ -23,15 +23,27 @@ const SITE_DIR = process.env.SITE_DIR ? resolve(process.env.SITE_DIR) : null;
 const DIST = SITE_DIR ? join(SITE_DIR, 'current') : join(ROOT, 'dist');
 const NEXT = SITE_DIR ? join(SITE_DIR, 'next') : join(ROOT, 'dist-next');
 const OLD = SITE_DIR ? join(SITE_DIR, 'old') : join(ROOT, 'dist-old');
+// Astro moves files with rename(), which cannot cross filesystems (EXDEV) into a mounted volume:
+// with SITE_DIR we build inside the app's own filesystem and then copy into the volume.
+const BUILD_OUT = SITE_DIR ? join(ROOT, 'dist-build') : NEXT;
 const PORT = Number(process.env.BUILD_SERVER_PORT ?? 4322);
 const HOST = process.env.BUILD_SERVER_HOST ?? '127.0.0.1';
 const TOKEN = process.env.REBUILD_WEBHOOK_TOKEN ?? '';
+if (SITE_DIR && !TOKEN) {
+  // Production mode (shared volume): never run an unauthenticated rebuild endpoint.
+  console.error('[build-server] REBUILD_WEBHOOK_TOKEN es obligatorio cuando SITE_DIR está definido');
+  process.exit(1);
+}
 
 const state = { building: false, queued: false, lastBuildAt: null, lastOk: null, lastDurationMs: null };
 
 function runBuild() {
   return new Promise((done) => {
-    const child = spawn('npx', ['astro', 'build', '--outDir', NEXT], { cwd: ROOT, stdio: 'inherit', env: process.env });
+    const child = spawn('npx', ['astro', 'build', '--outDir', BUILD_OUT], {
+      cwd: ROOT,
+      stdio: 'inherit',
+      env: process.env,
+    });
     child.on('close', (code) => done(code === 0));
   });
 }
@@ -44,7 +56,18 @@ async function build() {
   state.building = true;
   const started = Date.now();
   await rm(NEXT, { recursive: true, force: true });
-  const ok = await runBuild();
+  await rm(BUILD_OUT, { recursive: true, force: true });
+  let ok = await runBuild();
+  if (ok && BUILD_OUT !== NEXT) {
+    ok = await cp(BUILD_OUT, NEXT, { recursive: true }).then(
+      () => true,
+      (err) => {
+        console.error('[build-server] copy failed', err);
+        return false;
+      },
+    );
+    await rm(BUILD_OUT, { recursive: true, force: true });
+  }
   if (ok) {
     await rm(OLD, { recursive: true, force: true });
     await rename(DIST, OLD).catch(() => undefined);
